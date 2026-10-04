@@ -1,6 +1,14 @@
 import type { GameModule } from '../../platform/types';
 import { showCelebration } from './celebration';
-import { addResult, bestTime, starCount, type PuzzleProgress } from './progress';
+import {
+  addResult,
+  bestTime,
+  findSnapshot,
+  saveSnapshot,
+  starCount,
+  type PuzzleProgress,
+  type PuzzleSnapshot,
+} from './progress';
 import { makeSampleImage } from './sample';
 import { mountPuzzle } from './view';
 
@@ -14,14 +22,30 @@ export const puzzleGame: GameModule = {
   icon: '🧩',
   start(root, ctx) {
     let stop = () => {};
+    let stopped = false;
 
-    const run = () => {
+    // Opslagacties lopen achter elkaar, zodat snel opeenvolgende zetten elkaar niet overschrijven.
+    let queue: Promise<unknown> = Promise.resolve();
+    const update = (change: (current: PuzzleProgress | undefined) => PuzzleProgress) => {
+      queue = queue
+        .then(async () => ctx.progress.save(change(await ctx.progress.load<PuzzleProgress>())))
+        .catch(() => {
+          // Opslag mislukt: het kind speelt gewoon door.
+        });
+      return queue;
+    };
+
+    const run = (restore?: PuzzleSnapshot) => {
       stop = mountPuzzle(root, {
+        puzzleId: SAMPLE_PUZZLE_ID,
         image: makeSampleImage(),
         pieces: SAMPLE_PIECES,
         drawerSide: ctx.profile.drawerSide,
         soundOn: ctx.profile.soundOn,
+        restore,
+        onProgress: (snapshot) => void update((current) => saveSnapshot(current, snapshot)),
         onComplete: async (timeMs) => {
+          await queue;
           let previous: PuzzleProgress | undefined;
           try {
             previous = await ctx.progress.load<PuzzleProgress>();
@@ -39,8 +63,8 @@ export const puzzleGame: GameModule = {
             },
             onHome: ctx.exit,
           });
-          await ctx.progress.save(
-            addResult(previous, {
+          void update((current) =>
+            addResult(current, {
               puzzleId: SAMPLE_PUZZLE_ID,
               pieces: SAMPLE_PIECES,
               timeMs,
@@ -51,8 +75,20 @@ export const puzzleGame: GameModule = {
       });
     };
 
-    run();
-    return () => stop();
+    void (async () => {
+      let progress: PuzzleProgress | undefined;
+      try {
+        progress = await ctx.progress.load<PuzzleProgress>();
+      } catch {
+        // Zonder opslag begint het kind gewoon opnieuw.
+      }
+      if (!stopped) run(findSnapshot(progress, SAMPLE_PUZZLE_ID, SAMPLE_PIECES));
+    })();
+
+    return () => {
+      stopped = true;
+      stop();
+    };
   },
   summarize(progress) {
     return { stars: starCount(progress as PuzzleProgress | undefined) };

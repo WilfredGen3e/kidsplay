@@ -2,6 +2,7 @@ import { el } from '../../ui/dom';
 import { buildPieces, computeGrid } from './grid';
 import { sliceRectangular } from './image';
 import { clampToStage, fitScale } from './layout';
+import type { PuzzleSnapshot } from './progress';
 import { playClick } from './sound';
 import { applyDrop, snapDistance, type SnapPiece } from './snap';
 
@@ -17,6 +18,7 @@ interface PieceState extends SnapPiece {
 }
 
 export interface PuzzleOptions {
+  puzzleId: string;
   image: HTMLCanvasElement;
   pieces: number;
   drawerSide: 'left' | 'right';
@@ -25,6 +27,10 @@ export interface PuzzleOptions {
   snapFactor?: number;
   /** Aangeroepen zodra het laatste stuk vastklikt, met de speeltijd sinds het eerste opgepakte stuk. */
   onComplete?: (timeMs: number) => void;
+  /** Hervat vanaf deze tussenstand (die moet kloppen met `pieces`). */
+  restore?: PuzzleSnapshot;
+  /** Aangeroepen na elke zet, zodat de tussenstand bewaard kan worden. */
+  onProgress?: (snapshot: PuzzleSnapshot) => void;
 }
 
 function shuffled<T>(items: T[]): T[] {
@@ -66,6 +72,8 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   let z = 1;
   let startedAt: number | undefined;
   let completed = false;
+  const elapsedBefore = opts.restore?.elapsedMs ?? 0;
+  const elapsed = () => elapsedBefore + (startedAt === undefined ? 0 : performance.now() - startedAt);
   let selected: PieceState | undefined;
 
   const groupOf = (p: PieceState) => (p.where === 'tray' ? [p] : pieces.filter((q) => q.group === p.group));
@@ -106,11 +114,23 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     }
   }
 
+  function snapshot(): PuzzleSnapshot {
+    const byEl = new Map<Element, PieceState>(pieces.map((p) => [p.el, p]));
+    return {
+      puzzleId: opts.puzzleId,
+      pieces: opts.pieces,
+      elapsedMs: elapsed(),
+      state: pieces.map((p) => ({ id: p.info.id, where: p.where, x: p.x, y: p.y, locked: p.locked, group: p.group })),
+      trayOrder: [...tray.children].map((c) => byEl.get(c)!.info.id),
+    };
+  }
+
   function toTray(p: PieceState) {
     p.where = 'tray';
     p.el.classList.remove('loose', 'dragging');
     setTraySize(p);
     tray.append(p.el);
+    opts.onProgress?.(snapshot());
   }
 
   function lift(members: PieceState[]) {
@@ -159,7 +179,9 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     if (locked && opts.soundOn) playClick();
     if (!completed && pieces.every((m) => m.locked)) {
       completed = true;
-      opts.onComplete?.(performance.now() - (startedAt ?? performance.now()));
+      opts.onComplete?.(elapsed());
+    } else {
+      opts.onProgress?.(snapshot());
     }
   }
 
@@ -240,11 +262,21 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     settle(p);
   });
 
-  for (const p of shuffled(pieces)) {
+  const restore = opts.restore;
+  const trayOrder = restore ? restore.trayOrder.map((id) => pieces[id]) : shuffled(pieces);
+  for (const p of trayOrder) {
     setTraySize(p);
     tray.append(p.el);
-    attachDrag(p);
   }
+  for (const saved of restore?.state ?? []) {
+    if (saved.where !== 'stage') continue;
+    const p = pieces[saved.id];
+    Object.assign(p, { where: 'stage', x: saved.x, y: saved.y, locked: saved.locked, group: saved.group });
+    p.el.classList.add(saved.locked ? 'locked' : 'loose');
+    p.el.style.zIndex = saved.locked ? '0' : String(++z);
+    stage.append(p.el);
+  }
+  for (const p of pieces) attachDrag(p);
 
   layout();
   window.addEventListener('resize', layout);

@@ -26,7 +26,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 - [x] PRD vastgelegd
 - [x] Fase 1 – Basis (profielscherm, spellenoverzicht, lokale opslag)
-- [~] Fase 2 – Puzzel speelbaar: lade, canvas, slepen, vastklikken (rand/buren/groepen), afronden met voortgang klaar; nog open: foto uploaden door de ouder, tussenstand bewaren (puzzel gebruikt nu ingebouwde voorbeeldafbeelding)
+- [~] Fase 2 – Puzzel speelbaar: lade, canvas, slepen, vastklikken (rand/buren/groepen), afronden, voortgang en tussenstand (hervatten) klaar; nog open: foto uploaden door de ouder (puzzel gebruikt nu ingebouwde voorbeeldafbeelding)
 - [ ] Fase 3 – Echte puzzel
 - [ ] Fase 4 – Ouderdeel en voortgang
 - [ ] Fase 5 – Mac-app (Tauri)

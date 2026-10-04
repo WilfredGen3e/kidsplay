@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { addResult, bestTime, formatTime, starCount } from './progress';
+import {
+  addResult,
+  bestTime,
+  findSnapshot,
+  formatTime,
+  saveSnapshot,
+  starCount,
+  type PuzzleSnapshot,
+} from './progress';
 
 const result = (timeMs: number, pieces = 12, puzzleId = 'strand') => ({
   puzzleId,
@@ -36,5 +44,53 @@ describe('formatTime', () => {
     expect(formatTime(252_000)).toBe('4 min 12 s');
     expect(formatTime(45_400)).toBe('45 s');
     expect(formatTime(60_000)).toBe('1 min 0 s');
+  });
+});
+
+const snapshot = (over: Partial<PuzzleSnapshot> = {}): PuzzleSnapshot => ({
+  puzzleId: 'strand',
+  pieces: 4,
+  elapsedMs: 5000,
+  state: [
+    { id: 0, where: 'stage', x: 0, y: 0, locked: true, group: 0 },
+    { id: 1, where: 'stage', x: 340, y: 120, locked: false, group: 1 },
+    { id: 2, where: 'tray', x: 0, y: 0, locked: false, group: 2 },
+    { id: 3, where: 'tray', x: 0, y: 0, locked: false, group: 3 },
+  ],
+  trayOrder: [3, 2],
+  ...over,
+});
+
+describe('tussenstand', () => {
+  it('bewaart en vindt de tussenstand per puzzel en aantal stukjes', () => {
+    const p = saveSnapshot(undefined, snapshot());
+    expect(findSnapshot(p, 'strand', 4)).toEqual(snapshot());
+    expect(findSnapshot(p, 'strand', 8)).toBeUndefined();
+    expect(findSnapshot(p, 'bos', 4)).toBeUndefined();
+    expect(findSnapshot(undefined, 'strand', 4)).toBeUndefined();
+  });
+
+  it('vervangt een eerdere tussenstand en behoudt de resultaten', () => {
+    const base = addResult(undefined, result(1000, 4));
+    const p = saveSnapshot(saveSnapshot(base, snapshot({ elapsedMs: 1 })), snapshot({ elapsedMs: 2 }));
+    expect(p.inProgress).toHaveLength(1);
+    expect(findSnapshot(p, 'strand', 4)?.elapsedMs).toBe(2);
+    expect(p.results).toHaveLength(1);
+  });
+
+  it('wist de tussenstand bij voltooien', () => {
+    const p = addResult(saveSnapshot(undefined, snapshot()), result(9000, 4));
+    expect(findSnapshot(p, 'strand', 4)).toBeUndefined();
+    expect(starCount(p)).toBe(1);
+  });
+
+  it('negeert een tussenstand die niet meer klopt', () => {
+    const bad = [
+      snapshot({ state: snapshot().state.slice(1) }),
+      snapshot({ trayOrder: [3] }),
+      snapshot({ elapsedMs: NaN }),
+      snapshot({ state: snapshot().state.map((s) => ({ ...s, id: 0 })) }),
+    ];
+    for (const b of bad) expect(findSnapshot(saveSnapshot(undefined, b), 'strand', 4)).toBeUndefined();
   });
 });
