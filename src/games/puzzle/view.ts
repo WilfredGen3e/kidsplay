@@ -72,7 +72,15 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   trayPanel.style.width = `${TRAY_WIDTH}px`;
   const trayHead = el('div', 'tray-head');
   const tray = el('div', 'tray');
-  trayPanel.append(trayHead, tray);
+  // Scrollen met een trackpad is lastig voor jonge kinderen: pijlen boven en onder de lade.
+  const scrollStep = () => (TRAY_ITEM + 16) * 2;
+  const upButton = iconButton('⬆️', 'Omhoog', 'tool-button tray-arrow', () =>
+    tray.scrollBy({ top: -scrollStep(), behavior: 'smooth' }),
+  );
+  const downButton = iconButton('⬇️', 'Omlaag', 'tool-button tray-arrow', () =>
+    tray.scrollBy({ top: scrollStep(), behavior: 'smooth' }),
+  );
+  trayPanel.append(trayHead, upButton, tray, downButton);
   const stage = el('div', 'stage');
   const board = el('div', 'board');
   stage.append(board);

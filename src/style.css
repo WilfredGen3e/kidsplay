@@ -343,6 +343,12 @@ button {
   box-shadow: 0 4px 0 rgb(0 0 0 / 20%);
 }
 
+.tray-arrow {
+  flex: none;
+  align-self: center;
+  margin: 4px 0;
+}
+
 .preview-card {
   padding: 6px;
   border-radius: 16px;
