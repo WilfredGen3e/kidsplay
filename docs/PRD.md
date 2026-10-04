@@ -231,7 +231,7 @@ Welke sticker het kind krijgt, staat al vast voordat het kiest; elk pakje bevat 
 
 De volgende sticker wordt zo bepaald:
 
-- Uit de stickers die het kind nog niet heeft, op volgorde of willekeurig (ouder kiest per profiel).
+- Uit de stickers die het kind nog niet heeft, standaard willekeurig; de ouder kan per profiel kiezen voor op volgorde.
 - Geen dubbele stickers tot de hele set verzameld is.
 - Is alles verzameld, dan krijgt het kind een gouden "compleet"-sticker en kan de ouder nieuwe stickers toevoegen.
 

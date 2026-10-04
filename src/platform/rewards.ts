@@ -11,10 +11,12 @@ export interface RewardState {
   order: 'fixed' | 'random';
   /** Punten uit eerder gespeelde puzzels zijn al bijgeschreven (eenmalig, bij de komst van het stickerboek). */
   backfilled?: boolean;
+  /** De ouder heeft de volgorde zelf gekozen; anders geldt willekeurig. */
+  orderSet?: boolean;
 }
 
 export function defaultRewardState(): RewardState {
-  return { points: 0, threshold: DEFAULT_THRESHOLD, order: 'fixed' };
+  return { points: 0, threshold: DEFAULT_THRESHOLD, order: 'random' };
 }
 
 /** Vult ontbrekende of ongeldige velden aan, zodat oude of beschadigde opslag nooit stukgaat. */
@@ -23,7 +25,15 @@ export function normalizeRewardState(saved: Partial<RewardState> | undefined): R
   if (!saved) return base;
   const threshold = Number.isInteger(saved.threshold) && saved.threshold! >= 1 ? saved.threshold! : base.threshold;
   const points = Number.isInteger(saved.points) && saved.points! >= 0 ? saved.points! : 0;
-  return { points, threshold, order: saved.order === 'random' ? 'random' : 'fixed', ...(saved.backfilled ? { backfilled: true } : {}) };
+  // Standaard willekeurig; 'op volgorde' alleen als de ouder dat bewust koos.
+  const order = saved.orderSet && saved.order === 'fixed' ? 'fixed' : 'random';
+  return {
+    points,
+    threshold,
+    order,
+    ...(saved.orderSet ? { orderSet: true } : {}),
+    ...(saved.backfilled ? { backfilled: true } : {}),
+  };
 }
 
 export function addPoints(state: RewardState, count: number): RewardState {

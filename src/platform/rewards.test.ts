@@ -15,7 +15,7 @@ import { IndexedDbStorage } from './storage/indexeddb';
 
 describe('spaarstand', () => {
   it('begint op 0 met drempel 50', () => {
-    expect(defaultRewardState()).toEqual({ points: 0, threshold: 50, order: 'fixed' });
+    expect(defaultRewardState()).toEqual({ points: 0, threshold: 50, order: 'random' });
   });
 
   it('geeft een cadeautje bij de drempel en laat restpunten doorschuiven', () => {
@@ -38,6 +38,9 @@ describe('spaarstand', () => {
   it('negeert negatieve aantallen en herstelt ongeldige opslag', () => {
     expect(addPoints(defaultRewardState(), -5).points).toBe(0);
     expect(normalizeRewardState({ points: -1, threshold: 0, order: 'x' as never })).toEqual(defaultRewardState());
+    // Een eerder opgeslagen 'fixed' zonder bewuste keuze van de ouder wordt willekeurig.
+    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'fixed' }).order).toBe('random');
+    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'fixed', orderSet: true }).order).toBe('fixed');
     expect(normalizeRewardState({ points: 7, threshold: 20, order: 'random' })).toEqual({
       points: 7,
       threshold: 20,

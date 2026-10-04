@@ -42,7 +42,7 @@ export function manageStickers(root: HTMLElement, deps: StickerManageDeps): () =
     if (stickers.length === 0) {
       card.append(el('p', 'muted', 'Nog geen stickers. Maak een ronde flippo van een plaatje; kinderen winnen ze met hun spaarpunten.'));
     } else {
-      card.append(el('p', 'muted', 'Sleep aan ☰ om de volgorde te veranderen. Kinderen krijgen de stickers in deze volgorde (of willekeurig, per profiel in te stellen).'));
+      card.append(el('p', 'muted', 'Sleep aan ☰ om de volgorde te veranderen. Kinderen krijgen de stickers willekeurig; per profiel kun je kiezen voor deze volgorde.'));
     }
     const list = el('div', 'sticker-list');
     for (const sticker of stickers) list.append(row(sticker, album));
