@@ -62,31 +62,28 @@ export function generateEdges(grid: Grid, seed: string): JigsawEdges {
 
 export function shapeMetrics(imageW: number, imageH: number, grid: Grid): ShapeMetrics {
   const base = Math.min(imageW / grid.cols, imageH / grid.rows);
-  return { depth: base * 0.22, margin: Math.ceil(base * 0.25) };
+  return { depth: base * 0.24, margin: Math.ceil(base * 0.32) };
 }
 
 /**
- * Nop in een rand van lengte `len`, in (langs, uit)-coördinaten met de rand op uit = 0.
- * Begint en eindigt op de rand; het stuk ertussen is een rechte lijn.
+ * Rand van lengte `len` in (langs, uit)-coördinaten, van (0, 0) naar (len, 0): de klassieke puzzelnop met
+ * een smalle hals en een ronde kop, met een zachte golf in de rand ervoor en erna (drie bezier-bochten).
+ * `depth` is de hoogte van de nop; `shift` verschuift de nop langs de rand.
  */
 function knob(len: number, depth: number, shift: number): Curve[] {
+  const tx = len * 0.1; // breedte-eenheid van hals en kop
+  const ty = depth / 2.5; // hoogte-eenheid; de kop komt zo op `depth`
   const k = len * (0.5 + shift);
-  const nw = len * 0.06;
-  const hw = len * 0.11;
-  const a = depth;
   const pt = (x: number, y: number): Point => ({ x, y });
   return [
-    { c1: pt(k - 1.2 * nw, 0.05 * a), c2: pt(k - 1.05 * nw, 0.25 * a), to: pt(k - nw, 0.4 * a) },
-    { c1: pt(k - 0.95 * nw, 0.55 * a), c2: pt(k - 1.05 * hw, 0.55 * a), to: pt(k - hw, 0.8 * a) },
-    { c1: pt(k - 1.1 * hw, 1.05 * a), c2: pt(k - 0.4 * hw, 1.1 * a), to: pt(k, a) },
-    { c1: pt(k + 0.4 * hw, 1.1 * a), c2: pt(k + 1.1 * hw, 1.05 * a), to: pt(k + hw, 0.8 * a) },
-    { c1: pt(k + 1.05 * hw, 0.55 * a), c2: pt(k + 0.95 * nw, 0.55 * a), to: pt(k + nw, 0.4 * a) },
-    { c1: pt(k + 1.05 * nw, 0.25 * a), c2: pt(k + 1.2 * nw, 0.05 * a), to: pt(k + 1.5 * nw, 0) },
+    { c1: pt(len * 0.2, 0), c2: pt(k + tx * 0.4, -ty), to: pt(k - tx, ty) },
+    { c1: pt(k - 2 * tx, 3 * ty), c2: pt(k + 2 * tx, 3 * ty), to: pt(k + tx, ty) },
+    { c1: pt(k + tx * 1.6, -ty), c2: pt(len * 0.8, 0), to: pt(len, 0) },
   ];
 }
-/** Beginpunt van de eerste bocht van `knob` (de rand loopt daar recht naartoe). */
-function knobStart(len: number, shift: number): number {
-  return len * (0.5 + shift) - 1.5 * len * 0.06;
+/** Beginpunt van de eerste bocht van `knob`. */
+function knobStart(): number {
+  return 0;
 }
 
 export type PathCommand =
@@ -111,7 +108,7 @@ function edgePath(from: Point, to: Point, bulge: Point, edge: EdgeShape | undefi
     x: start.x + dir.x * p.x + n.x * p.y,
     y: start.y + dir.y * p.x + n.y * p.y,
   });
-  const s = knobStart(len, edge.shift);
+  const s = knobStart();
   const curves = knob(len, depth, edge.shift);
 
   const cmds: PathCommand[] = [];

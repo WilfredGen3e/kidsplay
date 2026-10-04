@@ -40,3 +40,7 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## Back-up: Blobs en fake-indexeddb
 - **Wat:** `fake-indexeddb` bewaart een jsdom-`Blob` niet (komt terug als `{}`), dus een test met Blob via de opslag faalt.
 - **Fix:** Blob-omzetting (`encodeBlobs`/`decodeBlobs`) los testen; de echte rondgang is in een echte browser gecontroleerd.
+
+## Puzzelvorm: bekijk het resultaat, niet alleen de tests
+- **Wat:** de eerste nop (smalle stok met klein kopje) voldeed aan alle tests (randen passen, binnen de bitmap) maar zag er mager uit.
+- **Fix:** klassieke vorm in `shapes.ts` (`knob`: drie bezier-bochten, hals + ronde kop + zachte golf in de rand). Tweak de vorm aan de hand van een screenshot: teken `piecePath` voor een raster op een canvas in een echte browser.

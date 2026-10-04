@@ -44,12 +44,12 @@ describe('piecePath', () => {
   });
 
   it('heeft rechte buitenranden en gebogen binnenranden', () => {
-    // Hoekstuk 0: alleen rechter- en onderrand zijn binnenranden → 2 × 6 bochten.
-    expect(curves(path(0))).toHaveLength(12);
+    // Hoekstuk 0: alleen rechter- en onderrand zijn binnenranden → 2 × 3 bochten.
+    expect(curves(path(0))).toHaveLength(6);
     // Middenstuk 5 heeft vier binnenranden.
-    expect(curves(path(5))).toHaveLength(24);
+    expect(curves(path(5))).toHaveLength(12);
     // Hoekstuk rechtsonder: alleen boven en links.
-    expect(curves(path(11))).toHaveLength(12);
+    expect(curves(path(11))).toHaveLength(6);
   });
 
   it('past: de gedeelde rand van twee buren is dezelfde lijn', () => {
@@ -58,14 +58,14 @@ describe('piecePath', () => {
     const abs = (piece: typeof left, p: { x: number; y: number }) =>
       `${Math.round((p.x + piece.rect.x - metrics.margin) * 1000)},${Math.round((p.y + piece.rect.y - metrics.margin) * 1000)}`;
     type Cubic = Extract<PathCommand, { op: 'C' }>;
-    // Rechterrand van stuk 5 = bochten 7–12; linkerrand van stuk 6 = laatste 6 bochten.
-    const a = curves(path(5)).slice(6, 12) as Cubic[];
-    const b = curves(path(6)).slice(18, 24) as Cubic[];
+    // Rechterrand van stuk 5 = bochten 4–6; linkerrand van stuk 6 = laatste 3 bochten.
+    const a = curves(path(5)).slice(3, 6) as Cubic[];
+    const b = curves(path(6)).slice(9, 12) as Cubic[];
     // Achterstevoren lopen verwisselt c1 en c2: vergelijk de controlepunten als verzameling.
     const controls = (piece: typeof left, cs: Cubic[]) => new Set(cs.flatMap((c) => [abs(piece, c.c1), abs(piece, c.c2)]));
     expect(controls(right, b)).toEqual(controls(left, a));
-    // De top van de nop is dezelfde plek.
-    expect(abs(right, b[2].to)).toBe(abs(left, a[2].to));
+    // De hals-onderkant van de nop (einde van bocht 1 voor links) is dezelfde plek.
+    expect(abs(right, b[0].to)).toBe(abs(left, a[1].to));
   });
 
   it('laat de nop binnen de marge van de bitmap', () => {
