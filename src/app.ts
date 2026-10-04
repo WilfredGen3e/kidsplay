@@ -1,10 +1,13 @@
-import { createGameContext } from './platform/context';
-import type { GameModule, Profile, ProfileStore, ProgressStore } from './platform/types';
-import { el, iconButton } from './ui/dom';
+import { createGameContext, createGameData } from './platform/context';
+import type { GameModule, Profile, ProfileStore, ProgressStore, RecordStore } from './platform/types';
+import { showParentCheck } from './parent/check';
+import { showParentMenu } from './parent';
+import { avatarNode, el, iconButton } from './ui/dom';
 
 export interface AppDeps {
   profiles: ProfileStore;
   progress: ProgressStore;
+  records: RecordStore;
   games: GameModule[];
 }
 
@@ -25,14 +28,25 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
       tile.type = 'button';
       tile.style.background = profile.color;
       tile.setAttribute('aria-label', profile.name);
-      tile.append(el('span', 'tile-icon', profile.avatar), el('span', 'tile-name', profile.name));
+      tile.append(avatarNode(profile.avatar, 'tile-icon'), el('span', 'tile-name', profile.name));
       tile.addEventListener('click', () => void showGames(profile));
       grid.append(tile);
     }
-    // Ouderdeel (oudercheck) volgt later; voorlopig nog zonder werking.
-    const gear = iconButton('⚙️', 'Ouders', 'corner-button gear', () => {});
+    const gear = iconButton('⚙️', 'Ouders', 'corner-button gear', showParent);
     show(screen);
+    if (grid.children.length === 0) grid.append(el('div', 'empty-state', '👋'), el('p', 'empty-hint', 'Nog geen profielen — tik op het tandwiel (⚙️) om er een te maken.'));
     screen.append(grid, gear);
+  }
+
+  function showParent() {
+    showParentCheck(
+      root,
+      () => {
+        show();
+        showParentMenu(root, { ...deps, exit: () => void showProfiles() });
+      },
+      () => void showProfiles(),
+    );
   }
 
   async function showGames(profile: Profile) {
@@ -41,7 +55,7 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
     header.style.background = profile.color;
     header.append(
       iconButton('🏠', 'Terug', 'round-button', () => void showProfiles()),
-      el('span', 'tile-icon', profile.avatar),
+      avatarNode(profile.avatar, 'tile-icon'),
       el('h1', 'header-name', profile.name),
     );
     const grid = el('div', 'grid');
@@ -69,7 +83,13 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
     const area = el('div', 'game-area');
     show(screen);
     screen.append(area, home);
-    const ctx = createGameContext(profile, game.id, deps.progress, () => void showGames(profile));
+    const ctx = createGameContext(
+      profile,
+      game.id,
+      deps.progress,
+      createGameData(deps.records, game.id),
+      () => void showGames(profile),
+    );
     cleanup = game.start(area, ctx);
   }
 

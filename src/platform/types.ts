@@ -22,9 +22,26 @@ export interface ProgressStore {
   save<T>(profileId: string, gameId: string, data: T): Promise<void>;
 }
 
+/** Gegevens van één spel buiten de voortgang, bijvoorbeeld de puzzels zelf. Afbeeldingen mogen als Blob. */
+export interface GameData {
+  list<T>(collection: string): Promise<T[]>;
+  get<T>(collection: string, id: string): Promise<T | undefined>;
+  put<T>(collection: string, id: string, value: T): Promise<void>;
+  remove(collection: string, id: string): Promise<void>;
+}
+
+/** Opslag voor spelgegevens, gescheiden per spel. */
+export interface RecordStore {
+  list<T>(gameId: string, collection: string): Promise<T[]>;
+  get<T>(gameId: string, collection: string, id: string): Promise<T | undefined>;
+  put<T>(gameId: string, collection: string, id: string, value: T): Promise<void>;
+  remove(gameId: string, collection: string, id: string): Promise<void>;
+}
+
 /** Wat het platform aan een spel meegeeft; het spel kent verder geen opslagdetails. */
 export interface GameContext {
   profile: Profile;
+  data: GameData;
   progress: {
     load<T>(): Promise<T | undefined>;
     save<T>(data: T): Promise<void>;
@@ -38,6 +55,23 @@ export interface ProgressSummary {
   stars: number;
 }
 
+/** Een regel in het voortgangsoverzicht van de ouder. */
+export interface OverviewRow {
+  title: string;
+  /** Object-URL of data-URL van een plaatje. */
+  image?: string;
+  details: string[];
+  done: boolean;
+}
+
+/** Wat het platform aan het ouderdeel van een spel meegeeft. */
+export interface ManageContext {
+  profiles: Profile[];
+  data: GameData;
+  /** Terug naar het ouderdeel. */
+  back(): void;
+}
+
 export interface GameModule {
   id: string;
   name: string;
@@ -46,4 +80,10 @@ export interface GameModule {
   /** Start het spel in `root`; geeft een opruimfunctie terug. */
   start(root: HTMLElement, ctx: GameContext): void | (() => void);
   summarize(progress: unknown): ProgressSummary;
+  /** Eenmalig bij het opstarten, bijvoorbeeld om een voorbeeldpuzzel klaar te zetten. */
+  init?(data: GameData): Promise<void>;
+  /** Beheerscherm voor de ouder (puzzels maken, moeilijkheid). */
+  manage?(root: HTMLElement, ctx: ManageContext): void | (() => void);
+  /** Regels voor het voortgangsoverzicht van één kind. */
+  overview?(progress: unknown, data: GameData): Promise<OverviewRow[]>;
 }

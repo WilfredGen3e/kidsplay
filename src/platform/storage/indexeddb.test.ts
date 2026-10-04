@@ -66,3 +66,22 @@ describe('voortgang', () => {
     expect(await storage.load('bram', 'puzzel')).toEqual({ stars: 4 });
   });
 });
+
+describe('spelgegevens', () => {
+  it('bewaart gegevens per spel en collectie', async () => {
+    await storage.records.put('puzzle', 'puzzles', 'a', { name: 'A' });
+    await storage.records.put('puzzle', 'puzzles', 'b', { name: 'B' });
+    await storage.records.put('puzzle', 'settings', 'x', { snap: 'normaal' });
+    await storage.records.put('ander', 'puzzles', 'c', { name: 'C' });
+    expect(await storage.records.list('puzzle', 'puzzles')).toEqual([{ name: 'A' }, { name: 'B' }]);
+    expect(await storage.records.get('puzzle', 'settings', 'x')).toEqual({ snap: 'normaal' });
+    expect(await storage.records.get('puzzle', 'puzzles', 'zzz')).toBeUndefined();
+  });
+
+  it('verwijdert één record', async () => {
+    await storage.records.put('puzzle', 'puzzles', 'a', 1);
+    await storage.records.put('puzzle', 'puzzles', 'b', 2);
+    await storage.records.remove('puzzle', 'puzzles', 'a');
+    expect(await storage.records.list('puzzle', 'puzzles')).toEqual([2]);
+  });
+});

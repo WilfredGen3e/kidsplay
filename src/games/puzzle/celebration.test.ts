@@ -11,6 +11,7 @@ it('toont de speeltijd en roept de knoppen aan', () => {
   expect(parent.querySelector('.celebration-time')!.textContent).toContain('4 min 12 s');
   expect(parent.querySelector('.celebration-record')).not.toBeNull();
   const [again, home] = parent.querySelectorAll<HTMLButtonElement>('.celebration-buttons button');
+  expect(parent.querySelectorAll('.celebration-buttons button')).toHaveLength(2);
   again.click();
   home.click();
   expect(onAgain).toHaveBeenCalledOnce();

@@ -8,6 +8,8 @@ export interface CelebrationOptions {
   isRecord: boolean;
   soundOn: boolean;
   onAgain: () => void;
+  /** Naar de puzzelkeuze. */
+  onPick?: () => void;
   onHome: () => void;
 }
 
@@ -35,8 +37,9 @@ export function showCelebration(parent: HTMLElement, opts: CelebrationOptions): 
   const buttons = el('div', 'celebration-buttons');
   buttons.append(
     iconButton('🔄', 'Nog een keer', 'round-button', opts.onAgain),
-    iconButton('🏠', 'Terug', 'round-button', opts.onHome),
   );
+  if (opts.onPick) buttons.append(iconButton('🧩', 'Andere puzzel', 'round-button', opts.onPick));
+  buttons.append(iconButton('🏠', 'Terug', 'round-button', opts.onHome));
   card.append(buttons);
   overlay.append(card);
   parent.append(overlay);

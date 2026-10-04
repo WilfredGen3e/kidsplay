@@ -1,7 +1,8 @@
-import type { Profile, ProfileStore, ProgressStore } from '../types';
+import type { Profile, ProfileStore, ProgressStore, RecordStore } from '../types';
 
 const PROFILES = 'profiles';
 const PROGRESS = 'progress';
+const RECORDS = 'records';
 
 function promisify<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -23,12 +24,14 @@ export class IndexedDbStorage implements ProfileStore, ProgressStore {
 
   static open(name = 'familiespellen'): Promise<IndexedDbStorage> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(name, 1);
+      const request = indexedDB.open(name, 2);
       request.onupgradeneeded = () => {
         const db = request.result;
-        db.createObjectStore(PROFILES, { keyPath: 'id' });
+        if (!db.objectStoreNames.contains(PROFILES)) db.createObjectStore(PROFILES, { keyPath: 'id' });
         // Sleutel [profileId, gameId]; losse velden voor het opruimen per profiel.
-        db.createObjectStore(PROGRESS, { keyPath: ['profileId', 'gameId'] });
+        if (!db.objectStoreNames.contains(PROGRESS)) db.createObjectStore(PROGRESS, { keyPath: ['profileId', 'gameId'] });
+        // Versie 2: spelgegevens zoals puzzels, met sleutel [gameId, collection, id].
+        if (!db.objectStoreNames.contains(RECORDS)) db.createObjectStore(RECORDS, { keyPath: ['gameId', 'collection', 'id'] });
       };
       request.onsuccess = () => resolve(new IndexedDbStorage(request.result));
       request.onerror = () => reject(request.error);
@@ -73,4 +76,27 @@ export class IndexedDbStorage implements ProfileStore, ProgressStore {
     tx.objectStore(PROGRESS).put({ profileId, gameId, data });
     await done(tx);
   }
+
+  /** Spelgegevens (puzzels e.d.), los van profielen en voortgang. */
+  readonly records: RecordStore = {
+    list: async <T>(gameId: string, collection: string) => {
+      const range = IDBKeyRange.bound([gameId, collection], [gameId, collection, []]);
+      const rows = await promisify(this.db.transaction(RECORDS).objectStore(RECORDS).getAll(range));
+      return rows.map((r) => r.value as T);
+    },
+    get: async <T>(gameId: string, collection: string, id: string) => {
+      const row = await promisify(this.db.transaction(RECORDS).objectStore(RECORDS).get([gameId, collection, id]));
+      return row?.value as T | undefined;
+    },
+    put: async <T>(gameId: string, collection: string, id: string, value: T) => {
+      const tx = this.db.transaction(RECORDS, 'readwrite');
+      tx.objectStore(RECORDS).put({ gameId, collection, id, value });
+      await done(tx);
+    },
+    remove: async (gameId: string, collection: string, id: string) => {
+      const tx = this.db.transaction(RECORDS, 'readwrite');
+      tx.objectStore(RECORDS).delete([gameId, collection, id]);
+      await done(tx);
+    },
+  };
 }

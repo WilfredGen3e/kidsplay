@@ -3,7 +3,6 @@ import 'fake-indexeddb/auto';
 import { expect, it } from 'vitest';
 import { startApp } from './app';
 import { dummyGame } from './games/dummy';
-import { seedDemoProfiles } from './platform/seed';
 import { IndexedDbStorage } from './platform/storage/indexeddb';
 
 const q = <T extends Element>(root: ParentNode, sel: string) => root.querySelector<T>(sel)!;
@@ -11,9 +10,11 @@ const tick = () => new Promise((r) => setTimeout(r, 10));
 
 it('profiel kiezen → spel starten → huisknop terug', async () => {
   const storage = await IndexedDbStorage.open('app-test');
-  await seedDemoProfiles(storage);
+  const base = { color: '#e8590c', avatar: '🦊', drawerSide: 'right' as const, soundOn: true };
+  await storage.put({ ...base, id: 'demo-1', name: 'Anna' });
+  await storage.put({ ...base, id: 'demo-2', name: 'Bram', avatar: '🐳' });
   const root = document.createElement('div');
-  await startApp(root, { profiles: storage, progress: storage, games: [dummyGame] });
+  await startApp(root, { profiles: storage, progress: storage, records: storage.records, games: [dummyGame] });
 
   const names = [...root.querySelectorAll('.profile-tile')].map((t) => t.getAttribute('aria-label'));
   expect(names).toEqual(['Anna', 'Bram']);

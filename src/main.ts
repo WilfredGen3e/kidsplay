@@ -1,18 +1,17 @@
 import './style.css';
 import { startApp } from './app';
-import { dummyGame } from './games/dummy';
 import { puzzleGame } from './games/puzzle';
 import { getGames, registerGame } from './platform/registry';
-import { seedDemoProfiles } from './platform/seed';
+import { createGameData } from './platform/context';
 import { IndexedDbStorage } from './platform/storage/indexeddb';
 
 registerGame(puzzleGame);
-registerGame(dummyGame);
 
 const storage = await IndexedDbStorage.open();
-await seedDemoProfiles(storage);
+for (const game of getGames()) await game.init?.(createGameData(storage.records, game.id));
 await startApp(document.querySelector<HTMLDivElement>('#app')!, {
   profiles: storage,
   progress: storage,
+  records: storage.records,
   games: getGames(),
 });

@@ -1,16 +1,41 @@
-import type { PieceInfo, Rect } from './grid';
+import type { Rect } from './grid';
 
 export const MAX_IMAGE_WIDTH = 2048;
 
 /** Uitsnede als fracties (0–1) van de originele foto. */
 export type Crop = Rect;
 
+/** Foto uit een bestand of Blob; faalt bij formaten die de webview niet kan lezen (bijvoorbeeld HEIC in Chrome). */
+export async function loadImage(blob: Blob): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return img;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export function blobToCanvas(img: HTMLImageElement | HTMLCanvasElement): HTMLCanvasElement {
+  const width = img instanceof HTMLImageElement ? img.naturalWidth : img.width;
+  const height = img instanceof HTMLImageElement ? img.naturalHeight : img.height;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d')!.drawImage(img, 0, 0);
+  return canvas;
+}
+
 /** Snijdt de uitsnede uit de foto en verkleint tot maximaal MAX_IMAGE_WIDTH pixels breed. */
-export function cropAndScale(source: CanvasImageSource & { width: number; height: number }, crop: Crop): HTMLCanvasElement {
-  const sx = crop.x * source.width;
-  const sy = crop.y * source.height;
-  const sw = crop.width * source.width;
-  const sh = crop.height * source.height;
+export function cropAndScale(source: HTMLImageElement | HTMLCanvasElement, crop: Crop): HTMLCanvasElement {
+  const srcW = source instanceof HTMLImageElement ? source.naturalWidth : source.width;
+  const srcH = source instanceof HTMLImageElement ? source.naturalHeight : source.height;
+  const sx = crop.x * srcW;
+  const sy = crop.y * srcH;
+  const sw = crop.width * srcW;
+  const sh = crop.height * srcH;
   const scale = Math.min(1, MAX_IMAGE_WIDTH / sw);
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(sw * scale);
@@ -19,15 +44,18 @@ export function cropAndScale(source: CanvasImageSource & { width: number; height
   return canvas;
 }
 
-/** Eén canvas per stuk, rechthoekig uitgeknipt uit de (verkleinde) afbeelding. */
-export function sliceRectangular(image: HTMLCanvasElement, pieces: PieceInfo[]): Map<number, HTMLCanvasElement> {
-  const result = new Map<number, HTMLCanvasElement>();
-  for (const { id, rect } of pieces) {
-    const canvas = document.createElement('canvas');
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    canvas.getContext('2d')!.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
-    result.set(id, canvas);
-  }
-  return result;
+export function canvasToBlob(canvas: HTMLCanvasElement, quality = 0.9): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Afbeelding opslaan mislukt'))), 'image/jpeg', quality),
+  );
+}
+
+/** Kleine kopie voor tegels en lijsten. */
+export function thumbnail(canvas: HTMLCanvasElement, maxWidth = 400): HTMLCanvasElement {
+  const k = Math.min(1, maxWidth / canvas.width);
+  const copy = document.createElement('canvas');
+  copy.width = Math.round(canvas.width * k);
+  copy.height = Math.round(canvas.height * k);
+  copy.getContext('2d')!.drawImage(canvas, 0, 0, copy.width, copy.height);
+  return copy;
 }
