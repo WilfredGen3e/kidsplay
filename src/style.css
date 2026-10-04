@@ -127,7 +127,7 @@ button {
   place-items: center;
 }
 
-.game-area button {
+.game-area > button {
   font-size: 160px;
   background: none;
 }
@@ -153,15 +153,40 @@ button {
   flex-direction: row-reverse;
 }
 
-.tray {
+.tray-panel {
   flex: none;
+  display: flex;
+  flex-direction: column;
+  background: #e7f5ff;
+}
+
+.tray-head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 8px;
+}
+
+.puzzle-left .tray-head {
+  padding-top: 104px;
+}
+
+.tray-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.tray {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 104px 0 24px;
-  background: #e7f5ff;
+  padding: 8px 0 24px;
 }
 
 .stage {
@@ -309,30 +334,17 @@ button {
   pointer-events: none;
 }
 
-.stage-tools {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 900;
-  display: flex;
-  gap: 16px;
-}
-
 .tool-button {
   min-width: 64px;
   min-height: 64px;
   border-radius: 50%;
   background: #fff;
-  font-size: 32px;
+  font-size: 30px;
   box-shadow: 0 4px 0 rgb(0 0 0 / 20%);
 }
 
 .preview-card {
-  position: absolute;
-  top: 104px;
-  right: 24px;
-  z-index: 900;
-  padding: 8px;
+  padding: 6px;
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 6px 16px rgb(0 0 0 / 25%);
@@ -341,7 +353,7 @@ button {
 
 .preview-card canvas {
   display: block;
-  width: 240px;
+  width: 140px;
   height: auto;
   border-radius: 8px;
 }

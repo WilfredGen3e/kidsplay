@@ -8,30 +8,31 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 ## Technische keuzes
 
-- Webapp in TypeScript; fase 1 als lokale webpagina, later verpakt met Tauri (fase 5).
-- Puzzel-engine op HTML-canvas (Konva of PixiJS, nog te kiezen).
-- Opslag lokaal in `~/Library/Application Support/Familiespellen/` (SQLite of JSON, nog te kiezen).
+- Webapp in TypeScript (Vite, vanilla, geen framework); nu als lokale webpagina, later verpakt met Tauri (`docs/TAURI.md`).
+- Puzzel: gewone DOM-elementen met canvas-bitmaps per stuk, klassieke vorm (bezier-randen, `shapes.ts`), slepen met pointer-events op `window`.
+- Opslag: IndexedDB achter interfaces (`ProfileStore`, `ProgressStore`, `RecordStore`); later bestanden in `~/Library/Application Support/Familiespellen/`.
 - Volledig offline, geen accounts, geen tracking.
 - Doelgroep 4–10 jaar: grote klikvlakken (min. 64×64 px), iconen i.p.v. tekst, geen foutmeldingen.
 
 ## Structuur
 
-- `src/app.ts`: schermen (profielen → spellen → spel) en navigatie.
-- `src/platform/`: types (`GameModule`, `GameContext`, stores), registry, `storage/indexeddb.ts`, tijdelijke `seed.ts` (voorbeeldprofielen tot het ouderdeel er is).
-- `src/games/<spel>/`: elk spel een eigen module; nu alleen `dummy` als testspel.
-- Tests: `npm test` (vitest, jsdom, fake-indexeddb).
-- Nog te bouwen: ouderdeel (gear-knop is nog zonder werking).
+- `src/main.ts`: opstarten (opslag, spellen aanmelden, `init` per spel).
+- `src/app.ts`: schermen (profielen → spellen → spel) en navigatie; gear → oudercheck → ouderdeel.
+- `src/platform/`: types (`GameModule`, `GameContext`, stores), registry, `storage/indexeddb.ts`.
+- `src/parent/`: oudercheck (tafelsom), menu, profielbeheer, voortgangsoverzicht.
+- `src/games/puzzle/`: het fotopuzzelspel
+  - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
+- `src/games/dummy/`: testspel, alleen nog voor `app.test.ts`.
+- Tests: `npm test` (vitest, jsdom, fake-indexeddb). Slepen/layout alleen te controleren in een echte browser.
 
 ## Status
 
-- [x] PRD vastgelegd
-- [x] Fase 1 – Basis (profielscherm, spellenoverzicht, lokale opslag)
-- [~] Fase 2 – Puzzel speelbaar: lade, canvas, slepen, vastklikken (rand/buren/groepen), afronden, voortgang en tussenstand (hervatten) klaar; nog open: foto uploaden door de ouder (puzzel gebruikt nu ingebouwde voorbeeldafbeelding)
-- [ ] Fase 3 – Echte puzzel
-- [ ] Fase 4 – Ouderdeel en voortgang
-- [ ] Fase 5 – Mac-app (Tauri)
-
-Open vragen staan in het PRD.
+- [x] Fase 1 – Basis
+- [x] Fase 2 – Puzzel speelbaar
+- [x] Fase 3 – Echte puzzel (klassieke vormen, groepen, geluid, voltooi-animatie, tussenstand)
+- [x] Fase 4 – Ouderdeel en voortgang (oudercheck, profielen, puzzels maken, voortgang per kind)
+- [ ] Fase 5 – Mac-app (Tauri): nog niet gebouwd, zie `docs/TAURI.md`
+- Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
 
 ## Werkwijze
 

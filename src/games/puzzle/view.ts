@@ -68,12 +68,15 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   const bitmaps = sliceJigsaw(image, infos, grid, edges, metrics);
 
   const wrap = el('div', `puzzle puzzle-${opts.drawerSide}`);
+  const trayPanel = el('div', 'tray-panel');
+  trayPanel.style.width = `${TRAY_WIDTH}px`;
+  const trayHead = el('div', 'tray-head');
   const tray = el('div', 'tray');
-  tray.style.width = `${TRAY_WIDTH}px`;
+  trayPanel.append(trayHead, tray);
   const stage = el('div', 'stage');
   const board = el('div', 'board');
   stage.append(board);
-  wrap.append(tray, stage);
+  wrap.append(trayPanel, stage);
 
   if (opts.ghost) {
     const ghost = scaledCopy(image, 1024);
@@ -81,19 +84,19 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     board.append(ghost);
   }
 
-  const tools = el('div', 'stage-tools');
+  // Voorbeeld en hulpknop staan boven de lade, zodat ze nooit over het canvas of de stukjes liggen.
+  const tools = el('div', 'tray-tools');
   let previewCard: HTMLElement | undefined;
   if (opts.preview) {
     previewCard = el('div', 'preview-card');
     previewCard.append(scaledCopy(image, 320));
-    const toggle = iconButton('🖼️', 'Voorbeeld', 'tool-button', () => previewCard!.classList.toggle('hidden'));
-    tools.append(toggle);
-    stage.append(previewCard);
+    tools.append(iconButton('🖼️', 'Voorbeeld', 'tool-button', () => previewCard!.classList.toggle('hidden')));
   }
   if (opts.hint) {
     tools.append(iconButton('💡', 'Hulp', 'tool-button', () => showHint()));
   }
-  if (tools.children.length > 0) stage.append(tools);
+  if (tools.children.length > 0) trayHead.append(tools);
+  if (previewCard) trayHead.append(previewCard);
   root.replaceChildren(wrap);
 
   // Geïndexeerd op stuk-id (evaluateDrop rekent daarmee).
@@ -256,7 +259,6 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     p.el.addEventListener('pointerdown', (down) => {
       if (p.locked) return;
       down.preventDefault();
-      p.el.setPointerCapture(down.pointerId);
       const start = p.el.getBoundingClientRect();
       // Greep als fractie van het stuk: blijft kloppen als het stuk van maat wisselt.
       const fx = (down.clientX - start.left) / start.width;
@@ -293,22 +295,24 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       };
 
       const up = (e: PointerEvent) => {
-        p.el.removeEventListener('pointermove', move);
-        p.el.removeEventListener('pointerup', up);
-        p.el.removeEventListener('pointercancel', up);
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
         if (!lifted) {
           if (p.where === 'tray') select(selected === p ? undefined : p);
           return;
         }
-        const t = tray.getBoundingClientRect();
+        const t = trayPanel.getBoundingClientRect();
         const overTray = e.clientX >= t.left && e.clientX <= t.right && e.clientY >= t.top && e.clientY <= t.bottom;
         if (overTray && members.length === 1) toTray(p);
         else settle(p);
       };
 
-      p.el.addEventListener('pointermove', move);
-      p.el.addEventListener('pointerup', up);
-      p.el.addEventListener('pointercancel', up);
+      // Op window, niet op het stuk: bij het optillen verhuist het element naar het speelvlak en dan
+      // vervalt de pointer capture, waardoor loslaten boven iets anders het stuk 'vast' liet zitten.
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
     });
   }
 

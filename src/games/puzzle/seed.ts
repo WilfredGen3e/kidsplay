@@ -6,8 +6,10 @@ import { makeSampleImage } from './sample';
 /** Zet bij de eerste start één voorbeeldpuzzel klaar; verwijderen door de ouder blijft zo. */
 export async function ensureSamplePuzzle(data: GameData): Promise<void> {
   if (await data.get('meta', 'sampleSeeded')) return;
-  await data.put('meta', 'sampleSeeded', true);
-  if ((await data.list('puzzles')).length > 0) return;
+  if ((await data.list('puzzles')).length > 0) {
+    await data.put('meta', 'sampleSeeded', true);
+    return;
+  }
   const canvas = makeSampleImage();
   const puzzle: Puzzle = {
     id: `${GAME_ID}-voorbeeld`,
@@ -19,4 +21,6 @@ export async function ensureSamplePuzzle(data: GameData): Promise<void> {
     createdAt: new Date().toISOString(),
   };
   await data.put('puzzles', puzzle.id, puzzle);
+  // Pas na het aanmaken: een onderbroken start probeert het de volgende keer opnieuw.
+  await data.put('meta', 'sampleSeeded', true);
 }
