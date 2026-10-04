@@ -206,3 +206,16 @@ button {
   outline: 6px solid #fcc419;
   outline-offset: 2px;
 }
+
+.piece.snapping {
+  transition: transform 120ms ease-out;
+}
+
+.piece.locked {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  cursor: default;
+  box-shadow: none;
+}

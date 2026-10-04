@@ -1,25 +1,28 @@
 import { el } from '../../ui/dom';
-import { buildPieces, computeGrid, type PieceInfo } from './grid';
+import { buildPieces, computeGrid } from './grid';
 import { sliceRectangular } from './image';
 import { clampToStage, fitScale } from './layout';
+import { playClick } from './sound';
+import { applyDrop, snapDistance, type SnapPiece } from './snap';
 
 const TRAY_WIDTH = 168;
 const TRAY_ITEM = 120;
 const LIFT_SCALE = 1.05;
 const DRAG_THRESHOLD = 5;
+const SNAP_ANIMATION_MS = 120;
 
-interface PieceState {
-  info: PieceInfo;
+interface PieceState extends SnapPiece {
   el: HTMLCanvasElement;
-  where: 'tray' | 'loose';
-  x: number;
-  y: number;
+  where: 'tray' | 'stage';
 }
 
 export interface PuzzleOptions {
   image: HTMLCanvasElement;
   pieces: number;
   drawerSide: 'left' | 'right';
+  soundOn: boolean;
+  /** Factor op de snap-afstand: ruim > 1, krap < 1. */
+  snapFactor?: number;
 }
 
 function shuffled<T>(items: T[]): T[] {
@@ -47,18 +50,21 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   wrap.append(tray, stage);
   root.replaceChildren(wrap);
 
+  // Geïndexeerd op stuk-id (evaluateDrop rekent daarmee).
   const pieces: PieceState[] = infos.map((info) => {
     const canvas = bitmaps.get(info.id)!;
     canvas.className = 'piece';
-    return { info, el: canvas, where: 'tray', x: 0, y: 0 };
+    return { info, el: canvas, where: 'tray', x: 0, y: 0, locked: false, group: info.id };
   });
 
+  // Positie en schaal van het canvas in het speelvlak; stukken staan in afbeeldingspixels.
   let scale = 1;
+  let boardLeft = 0;
+  let boardTop = 0;
   let z = 1;
   let selected: PieceState | undefined;
 
-  const boardSize = () => ({ w: image.width * scale, h: image.height * scale });
-  const sizeOnBoard = (p: PieceState) => ({ w: p.info.rect.width * scale, h: p.info.rect.height * scale });
+  const groupOf = (p: PieceState) => (p.where === 'tray' ? [p] : pieces.filter((q) => q.group === p.group));
 
   function setTraySize(p: PieceState) {
     const k = TRAY_ITEM / Math.max(p.info.rect.width, p.info.rect.height);
@@ -68,26 +74,32 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   }
 
   function setBoardSize(p: PieceState) {
-    const { w, h } = sizeOnBoard(p);
-    p.el.style.width = `${w}px`;
-    p.el.style.height = `${h}px`;
+    p.el.style.width = `${p.info.rect.width * scale}px`;
+    p.el.style.height = `${p.info.rect.height * scale}px`;
   }
 
-  function place(p: PieceState, x: number, y: number, lift = false) {
-    p.x = x;
-    p.y = y;
-    p.el.style.transform = `translate(${x}px, ${y}px)${lift ? ` scale(${LIFT_SCALE})` : ''}`;
+  function render(p: PieceState) {
+    if (p.where !== 'stage') return;
+    const lift = p.el.classList.contains('dragging') && groupOf(p).length === 1;
+    p.el.style.transform = `translate(${boardLeft + p.x * scale}px, ${boardTop + p.y * scale}px)${lift ? ` scale(${LIFT_SCALE})` : ''}`;
   }
 
   function layout() {
     const rect = stage.getBoundingClientRect();
     scale = fitScale(rect.width, rect.height, image.width, image.height);
-    const { w, h } = boardSize();
+    const w = image.width * scale;
+    const h = image.height * scale;
+    boardLeft = (rect.width - w) / 2;
+    boardTop = (rect.height - h) / 2;
     board.style.width = `${w}px`;
     board.style.height = `${h}px`;
-    board.style.left = `${(rect.width - w) / 2}px`;
-    board.style.top = `${(rect.height - h) / 2}px`;
-    for (const p of pieces) if (p.where === 'loose') setBoardSize(p);
+    board.style.left = `${boardLeft}px`;
+    board.style.top = `${boardTop}px`;
+    for (const p of pieces) {
+      if (p.where !== 'stage') continue;
+      setBoardSize(p);
+      render(p);
+    }
   }
 
   function toTray(p: PieceState) {
@@ -97,17 +109,49 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     tray.append(p.el);
   }
 
-  function toStage(p: PieceState, x: number, y: number) {
-    const rect = stage.getBoundingClientRect();
-    const { w, h } = sizeOnBoard(p);
-    const pos = clampToStage(x, y, w, h, rect.width, rect.height);
-    p.where = 'loose';
-    p.el.classList.add('loose');
-    p.el.classList.remove('dragging');
-    p.el.style.zIndex = String(++z);
-    setBoardSize(p);
-    stage.append(p.el);
-    place(p, pos.x, pos.y);
+  function lift(members: PieceState[]) {
+    for (const m of members) {
+      m.where = 'stage';
+      m.el.classList.add('dragging');
+      m.el.style.zIndex = String(++z);
+      setBoardSize(m);
+      stage.append(m.el);
+    }
+  }
+
+  /** Legt de groep neer: houdt hem in beeld en laat hem eventueel vastklikken. */
+  function settle(p: PieceState) {
+    const s = stage.getBoundingClientRect();
+    const c = clampToStage(
+      boardLeft + p.x * scale,
+      boardTop + p.y * scale,
+      p.info.rect.width * scale,
+      p.info.rect.height * scale,
+      s.width,
+      s.height,
+    );
+    const dx = (c.x - boardLeft) / scale - p.x;
+    const dy = (c.y - boardTop) / scale - p.y;
+    for (const m of groupOf(p)) {
+      m.x += dx;
+      m.y += dy;
+      m.el.classList.remove('dragging');
+      m.el.classList.add('loose');
+    }
+
+    const dist = snapDistance((image.width / grid.cols) * scale, opts.snapFactor) / scale;
+    const { changed, locked } = applyDrop(pieces, grid, p.group, dist);
+    for (const m of changed) {
+      m.el.classList.add('snapping');
+      setTimeout(() => m.el.classList.remove('snapping'), SNAP_ANIMATION_MS + 40);
+      if (m.locked) {
+        m.el.classList.remove('loose');
+        m.el.classList.add('locked');
+        m.el.style.zIndex = '0';
+      }
+    }
+    for (const m of pieces) render(m);
+    if (locked && opts.soundOn) playClick();
   }
 
   function select(p: PieceState | undefined) {
@@ -116,40 +160,43 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     p?.el.classList.add('selected');
   }
 
-  for (const p of shuffled(pieces)) {
-    setTraySize(p);
-    tray.append(p.el);
-    attachDrag(p);
-  }
-
   function attachDrag(p: PieceState) {
     p.el.addEventListener('pointerdown', (down) => {
+      if (p.locked) return;
       down.preventDefault();
       p.el.setPointerCapture(down.pointerId);
       const start = p.el.getBoundingClientRect();
-      // Positie van de greep binnen het stuk, als fractie: blijft kloppen als het stuk van maat wisselt.
+      // Greep als fractie van het stuk: blijft kloppen als het stuk van maat wisselt.
       const fx = (down.clientX - start.left) / start.width;
       const fy = (down.clientY - start.top) / start.height;
+      // Een stuk uit de lade wisselt van maat en volgt de aanwijzer; een stuk op het canvas schuift mee.
+      const fromTray = p.where === 'tray';
+      let members: PieceState[] = [];
+      let origin: { x: number; y: number }[] = [];
       let lifted = false;
-
-      const follow = (e: PointerEvent) => {
-        const s = stage.getBoundingClientRect();
-        const { w, h } = sizeOnBoard(p);
-        place(p, e.clientX - s.left - fx * w, e.clientY - s.top - fy * h, true);
-      };
 
       const move = (e: PointerEvent) => {
         if (!lifted) {
           if (Math.hypot(e.clientX - down.clientX, e.clientY - down.clientY) < DRAG_THRESHOLD) return;
           lifted = true;
           select(undefined);
-          p.where = 'loose';
-          p.el.classList.add('dragging');
-          p.el.style.zIndex = String(++z);
-          setBoardSize(p);
-          stage.append(p.el);
+          members = groupOf(p);
+          origin = members.map((m) => ({ x: m.x, y: m.y }));
+          lift(members);
         }
-        follow(e);
+        if (fromTray) {
+          const s = stage.getBoundingClientRect();
+          p.x = (e.clientX - s.left - boardLeft) / scale - fx * p.info.rect.width;
+          p.y = (e.clientY - s.top - boardTop) / scale - fy * p.info.rect.height;
+        } else {
+          const dx = (e.clientX - down.clientX) / scale;
+          const dy = (e.clientY - down.clientY) / scale;
+          members.forEach((m, i) => {
+            m.x = origin[i].x + dx;
+            m.y = origin[i].y + dy;
+          });
+        }
+        members.forEach(render);
       };
 
       const up = (e: PointerEvent) => {
@@ -162,8 +209,8 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
         }
         const t = tray.getBoundingClientRect();
         const overTray = e.clientX >= t.left && e.clientX <= t.right && e.clientY >= t.top && e.clientY <= t.bottom;
-        if (overTray) toTray(p);
-        else toStage(p, p.x, p.y);
+        if (overTray && members.length === 1) toTray(p);
+        else settle(p);
       };
 
       p.el.addEventListener('pointermove', move);
@@ -175,12 +222,20 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   // Klikken in plaats van slepen: kies een stuk in de lade en klik daarna op het canvas.
   stage.addEventListener('click', (e) => {
     if (!selected || (e.target !== stage && e.target !== board)) return;
-    const s = stage.getBoundingClientRect();
-    const { w, h } = sizeOnBoard(selected);
     const p = selected;
     select(undefined);
-    toStage(p, e.clientX - s.left - w / 2, e.clientY - s.top - h / 2);
+    const s = stage.getBoundingClientRect();
+    p.x = (e.clientX - s.left - boardLeft) / scale - p.info.rect.width / 2;
+    p.y = (e.clientY - s.top - boardTop) / scale - p.info.rect.height / 2;
+    lift([p]);
+    settle(p);
   });
+
+  for (const p of shuffled(pieces)) {
+    setTraySize(p);
+    tray.append(p.el);
+    attachDrag(p);
+  }
 
   layout();
   window.addEventListener('resize', layout);

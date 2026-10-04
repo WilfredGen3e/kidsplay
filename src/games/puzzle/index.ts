@@ -12,6 +12,7 @@ export const puzzleGame: GameModule = {
       image: makeSampleImage(),
       pieces: 12,
       drawerSide: ctx.profile.drawerSide,
+      soundOn: ctx.profile.soundOn,
     });
   },
   summarize() {
