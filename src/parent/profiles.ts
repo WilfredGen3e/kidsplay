@@ -178,7 +178,7 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
     const wanted = Math.round(Number(threshold.value));
     if (!Number.isFinite(wanted) || wanted < 1 || wanted > 500) return void (error.textContent = 'Kies een aantal stukjes tussen 1 en 500.');
     await deps.profiles.put(draft);
-    await updateRewards(deps.progress, draft.id, (state) => ({ ...state, threshold: wanted, order: rewards.order }));
+    await updateRewards(deps.progress, draft.id, (state) => ({ ...state, threshold: wanted, order: rewards.order, backfilled: true }));
     await showProfiles(root, deps);
   });
 

@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import {
   addPoints,
+  applyBackfill,
   claimGift,
   defaultRewardState,
   loadRewards,
@@ -42,6 +43,14 @@ describe('spaarstand', () => {
       threshold: 20,
       order: 'random',
     });
+  });
+
+  it('schrijft punten van vroeger maar één keer bij', () => {
+    const once = applyBackfill(defaultRewardState(), 120);
+    expect(once.points).toBe(120);
+    expect(pendingGifts(once)).toBe(2);
+    expect(applyBackfill(once, 120)).toBe(once);
+    expect(normalizeRewardState(once).backfilled).toBe(true);
   });
 
   it('bewaart punten per profiel, ook bij snel opeenvolgende toevoegingen', async () => {

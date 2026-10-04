@@ -96,6 +96,8 @@ export interface GameModule {
   /** Start het spel in `root`; geeft een opruimfunctie terug. */
   start(root: HTMLElement, ctx: GameContext): void | (() => void);
   summarize(progress: unknown): ProgressSummary;
+  /** Spaarpunten die al verdiend zijn met eerdere voortgang; eenmalig gebruikt om het stickerboek te vullen. */
+  earnedPoints?(progress: unknown): number;
   /** Eenmalig bij het opstarten, bijvoorbeeld om een voorbeeldpuzzel klaar te zetten. */
   init?(data: GameData): Promise<void>;
   /** Beheerscherm voor de ouder (puzzels maken, moeilijkheid). */

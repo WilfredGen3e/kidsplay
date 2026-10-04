@@ -92,3 +92,10 @@ export function formatTime(ms: number): string {
   const seconds = total % 60;
   return minutes > 0 ? `${minutes} min ${seconds} s` : `${seconds} s`;
 }
+
+/** Stukjes die dit kind al gelegd heeft: voltooide puzzels plus de vastgeklikte stukjes van halve puzzels. */
+export function piecesPlaced(progress: PuzzleProgress | undefined): number {
+  const done = (progress?.results ?? []).reduce((sum, r) => sum + r.pieces, 0);
+  const partial = (progress?.inProgress ?? []).reduce((sum, s) => sum + s.state.filter((p) => p.locked).length, 0);
+  return done + partial;
+}

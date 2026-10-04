@@ -215,6 +215,7 @@ Elk kind spaart puzzelstukjes; bij elke 50 gelegde stukjes (per profiel instelba
 - De drempel is per profiel in te stellen door de ouder, bijvoorbeeld 20 voor de jongste en 50 voor de oudste. Standaard: 50.
 - In het spellenoverzicht en na elke puzzel ziet het kind een spaarbalk, zoals een pot die zich vult, met daaronder hoeveel stukjes er nog nodig zijn.
 - Restpunten schuiven door: wie op 53 uitkomt, begint met 3 aan de volgende sticker.
+- Eenmalig bij de start na de komst van het stickerboek krijgt elk bestaand kind de punten van al gelegde puzzels (voltooide puzzels plus vastgeklikte stukjes van halve puzzels) bijgeschreven (`GameModule.earnedPoints`, vlag `backfilled`).
 
 ### Cadeautje kiezen
 

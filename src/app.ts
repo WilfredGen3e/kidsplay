@@ -1,3 +1,4 @@
+import { applyBackfill, updateRewards } from './platform/rewards';
 import { createGameContext, createGameData } from './platform/context';
 import type { GameModule, Profile, ProfileStore, ProgressStore, RecordStore } from './platform/types';
 import { showParentCheck } from './parent/check';
@@ -139,5 +140,20 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
     });
   }
 
-  return showProfiles();
+  /** Kinderen die al puzzels gelegd hebben, krijgen daar eenmalig spaarpunten voor. */
+  async function backfillRewards() {
+    for (const profile of await deps.profiles.list()) {
+      let past = 0;
+      for (const game of deps.games) {
+        if (game.earnedPoints) past += game.earnedPoints(await deps.progress.load(profile.id, game.id));
+      }
+      await updateRewards(deps.progress, profile.id, (state) => applyBackfill(state, past));
+    }
+  }
+
+  return backfillRewards()
+    .catch(() => {
+      // Zonder bijschrijven blijft alles werken; de volgende start probeert het opnieuw.
+    })
+    .then(showProfiles);
 }

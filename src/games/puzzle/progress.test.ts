@@ -94,3 +94,20 @@ describe('tussenstand', () => {
     for (const b of bad) expect(findSnapshot(saveSnapshot(undefined, b), 'strand', 4)).toBeUndefined();
   });
 });
+
+describe('piecesPlaced', () => {
+  it('telt voltooide puzzels en vastgeklikte stukjes van halve puzzels', async () => {
+    const { piecesPlaced } = await import('./progress');
+    const piece = (id: number, locked: boolean) => ({ id, where: 'stage' as const, x: 0, y: 0, locked, group: id });
+    expect(piecesPlaced(undefined)).toBe(0);
+    expect(
+      piecesPlaced({
+        results: [
+          { puzzleId: 'a', pieces: 12, timeMs: 1, completedAt: '' },
+          { puzzleId: 'b', pieces: 4, timeMs: 1, completedAt: '' },
+        ],
+        inProgress: [{ puzzleId: 'c', pieces: 4, elapsedMs: 0, trayOrder: [], state: [piece(0, true), piece(1, true), piece(2, false), piece(3, false)] }],
+      }),
+    ).toBe(18);
+  });
+});

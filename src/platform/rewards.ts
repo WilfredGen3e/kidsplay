@@ -9,6 +9,8 @@ export interface RewardState {
   points: number;
   threshold: number;
   order: 'fixed' | 'random';
+  /** Punten uit eerder gespeelde puzzels zijn al bijgeschreven (eenmalig, bij de komst van het stickerboek). */
+  backfilled?: boolean;
 }
 
 export function defaultRewardState(): RewardState {
@@ -21,7 +23,7 @@ export function normalizeRewardState(saved: Partial<RewardState> | undefined): R
   if (!saved) return base;
   const threshold = Number.isInteger(saved.threshold) && saved.threshold! >= 1 ? saved.threshold! : base.threshold;
   const points = Number.isInteger(saved.points) && saved.points! >= 0 ? saved.points! : 0;
-  return { points, threshold, order: saved.order === 'random' ? 'random' : 'fixed' };
+  return { points, threshold, order: saved.order === 'random' ? 'random' : 'fixed', ...(saved.backfilled ? { backfilled: true } : {}) };
 }
 
 export function addPoints(state: RewardState, count: number): RewardState {
@@ -65,4 +67,10 @@ export function updateRewards(
   });
   queues.set(profileId, run);
   return run;
+}
+
+/** Schrijft eenmalig de punten van vroeger gespeelde spellen bij; een tweede keer gebeurt er niets. */
+export function applyBackfill(state: RewardState, pastPoints: number): RewardState {
+  if (state.backfilled) return state;
+  return { ...addPoints(state, pastPoints), backfilled: true };
 }

@@ -19,6 +19,7 @@ import {
   saveSnapshot,
   starCount,
   type PuzzleProgress,
+  piecesPlaced,
   type PuzzleSnapshot,
 } from './progress';
 import { ensureSamplePuzzle } from './seed';
@@ -175,6 +176,7 @@ export const puzzleGame: GameModule = {
   summarize(progress) {
     return { stars: starCount(progress as PuzzleProgress | undefined) };
   },
+  earnedPoints: (progress) => piecesPlaced(progress as PuzzleProgress | undefined),
   manage,
   async overview(progress, data): Promise<OverviewRow[]> {
     const p = progress as PuzzleProgress | undefined;
