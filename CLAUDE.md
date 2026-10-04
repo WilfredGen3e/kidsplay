@@ -12,13 +12,15 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - Puzzel: gewone DOM-elementen met canvas-bitmaps per stuk, klassieke vorm (bezier-randen, `shapes.ts`), slepen met pointer-events op `window`.
 - Opslag: IndexedDB achter interfaces (`ProfileStore`, `ProgressStore`, `RecordStore`); later bestanden in `~/Library/Application Support/Familiespellen/`.
 - Volledig offline, geen accounts, geen tracking.
+- Ook als webapp/PWA (iPad): `vite.config.ts` schrijft `dist/sw.js` (uit `src/sw.template.js`) met alle bestanden; `public/manifest.webmanifest` + iconen. GitHub Actions (`.github/workflows/pages.yml`) bouwt en publiceert naar Pages. Zie `docs/PWA.md`.
+- Back-up: ouder → 💾 Back-up downloadt/herstelt alles als één JSON (`src/platform/backup.ts`, Blobs als base64).
 - Doelgroep 4–10 jaar: grote klikvlakken (min. 64×64 px), iconen i.p.v. tekst, geen foutmeldingen.
 
 ## Structuur
 
 - `src/main.ts`: opstarten (opslag, spellen aanmelden, `init` per spel).
 - `src/app.ts`: schermen (profielen → spellen → spel) en navigatie; gear → oudercheck → ouderdeel.
-- `src/platform/`: types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
+- `src/platform/`: `backup.ts` (back-up maken/terugzetten), types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
 - `src/parent/`: oudercheck (tafelsom), menu, profielbeheer (incl. drempel en volgorde van stickers), voortgangsoverzicht.
 - `src/stickers/`: beloning. `model.ts` (Sticker/AlbumEntry, opslag onder spel-id `stickers`), `logic.ts` (volgende sticker, plekken, puur en getest), `flippo.ts` (ronde PNG, rand, glitter, gouden sticker), `manage.ts` (ouder: lijst, slepen om te ordenen, editor), `gifts.ts` (cadeautjes kiezen en openscheuren), `book.ts` (stickerboek), `status.ts` (spaarstand + cadeautjes).
 - `src/ui/`: `dom.ts`, `sound.ts` (klik, fanfare, scheuren, glinster), `confetti.ts`, `savings.ts` (spaarpot), `urls.ts`.
@@ -35,6 +37,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - [x] Fase 4 – Ouderdeel en voortgang (oudercheck, profielen, puzzels maken, voortgang per kind)
 - [x] Fase 5 – Mac-app (Tauri): `npm run app:build`, zie `docs/TAURI.md` (opstarten getest; bediening in het venster nog niet)
 - [x] Fase 6 – Stickerboek (beloning), zie PRD-hoofdstuk "Beloning": spaarstand + spaarbalk + drempel per profiel, flippo-editor (ouder → Stickers), cadeautjes kiezen/openmaken, stickerboek met albums van anderen (in de browser doorgelopen met Playwright; Mac-app nog niet)
+- [x] Fase 7 – Back-up (export/import), GitHub Pages en PWA voor offline op de iPad (offline getest in Chromium; iPad zelf nog niet)
 - Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
 
 ## Werkwijze

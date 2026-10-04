@@ -3,6 +3,7 @@ import type { GameModule, ProfileStore, ProgressStore, RecordStore } from '../pl
 import { manageStickers } from '../stickers/manage';
 import { STICKERS_ID } from '../stickers/model';
 import { el, iconButton } from '../ui/dom';
+import { showBackup, type BackupActions } from './backup';
 import { showProfiles } from './profiles';
 import { showOverview } from './progress';
 
@@ -11,6 +12,7 @@ export interface ParentDeps {
   progress: ProgressStore;
   records: RecordStore;
   games: GameModule[];
+  backup?: BackupActions;
   /** Terug naar het profielscherm. */
   exit(): void;
 }
@@ -56,6 +58,7 @@ export function showParentMenu(root: HTMLElement, deps: ParentDeps): void {
       back: menu,
     });
   });
+  if (deps.backup) tile('💾', 'Back-up', () => showBackup(root, { ...deps.backup!, back: menu }));
   tile('📊', 'Voortgang', () => void showOverview(root, { ...deps, back: menu }));
 
   screen.append(grid);

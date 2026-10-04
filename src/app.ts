@@ -3,6 +3,7 @@ import { createGameContext, createGameData } from './platform/context';
 import type { GameModule, Profile, ProfileStore, ProgressStore, RecordStore } from './platform/types';
 import { showParentCheck } from './parent/check';
 import { showParentMenu } from './parent';
+import type { BackupActions } from './parent/backup';
 import { startBook } from './stickers/book';
 import { startGifts } from './stickers/gifts';
 import { STICKERS_ID } from './stickers/model';
@@ -14,6 +15,8 @@ export interface AppDeps {
   profiles: ProfileStore;
   progress: ProgressStore;
   records: RecordStore;
+  /** Back-up maken en terugzetten; ontbreekt in tests zonder echte opslag. */
+  backup?: BackupActions;
   games: GameModule[];
 }
 

@@ -19,6 +19,13 @@ function done(tx: IDBTransaction): Promise<void> {
   });
 }
 
+/** Ruwe rijen zoals ze in IndexedDB staan. */
+export interface RawData {
+  profiles: unknown[];
+  progress: unknown[];
+  records: unknown[];
+}
+
 export class IndexedDbStorage implements ProfileStore, ProgressStore {
   private constructor(private readonly db: IDBDatabase) {}
 
@@ -40,6 +47,26 @@ export class IndexedDbStorage implements ProfileStore, ProgressStore {
 
   close(): void {
     this.db.close();
+  }
+
+  /** Alle rijen van alle opslagplekken, voor een back-up. */
+  async dumpAll(): Promise<RawData> {
+    const tx = this.db.transaction([PROFILES, PROGRESS, RECORDS]);
+    const [profiles, progress, records] = await Promise.all(
+      [PROFILES, PROGRESS, RECORDS].map((name) => promisify(tx.objectStore(name).getAll())),
+    );
+    return { profiles, progress, records };
+  }
+
+  /** Wist alles en zet de rijen terug, in één transactie (alles of niets). */
+  async replaceAll(data: RawData): Promise<void> {
+    const tx = this.db.transaction([PROFILES, PROGRESS, RECORDS], 'readwrite');
+    for (const [name, rows] of [[PROFILES, data.profiles], [PROGRESS, data.progress], [RECORDS, data.records]] as const) {
+      const store = tx.objectStore(name);
+      store.clear();
+      for (const row of rows) store.put(row);
+    }
+    await done(tx);
   }
 
   list(): Promise<Profile[]> {

@@ -31,3 +31,12 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## Playwright: IndexedDB delen tussen scripts
 - **Wat:** elk script met `chromium.launch()` begint met een lege IndexedDB, dus profielen en stickers uit een eerder script ontbraken.
 - **Fix:** `chromium.launchPersistentContext(<map>, …)` met dezelfde map in elk script.
+
+## Service worker: `Vary: Origin` liet de cache missen
+- **Wat:** offline kwam de pagina uit de cache, maar het JS-bestand niet (`MIME type text/html`, lege pagina). Module-scripts sturen een `Origin`-header mee, de server antwoordt met `Vary: Origin`, en `caches.match` vond het met `addAll` gecachete bestand daarom niet.
+- **Fix:** `caches.match(request, { ignoreSearch: true, ignoreVary: true })` in `src/sw.template.js`.
+- **Testen:** Playwrights `setOffline(true)` is bij service workers onbetrouwbaar; stop de server echt (`pkill -f vite`) en herlaad.
+
+## Back-up: Blobs en fake-indexeddb
+- **Wat:** `fake-indexeddb` bewaart een jsdom-`Blob` niet (komt terug als `{}`), dus een test met Blob via de opslag faalt.
+- **Fix:** Blob-omzetting (`encodeBlobs`/`decodeBlobs`) los testen; de echte rondgang is in een echte browser gecontroleerd.
