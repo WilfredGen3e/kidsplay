@@ -75,7 +75,7 @@ De ouder maakt van een eigen foto een puzzel; het kind kiest een puzzel, pakt st
 
 ### Puzzel maken (ouder)
 
-- Afbeelding uploaden via slepen of een bestandskiezer (JPG, PNG, HEIC).
+- Afbeelding uploaden via slepen of een bestandskiezer (JPG of PNG; geen HEIC, de ouder maakt zo nodig een screenshot, dat is altijd JPEG).
 - Uitsnede kiezen: de ouder schuift en zoomt de foto zodat het belangrijke deel in beeld is.
 - Naam geven aan de puzzel.
 - Aantal stukjes kiezen: 4, 8, 12 of een ander veelvoud van 4 (16, 20, 24 … tot maximaal 48).
