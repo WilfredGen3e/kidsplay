@@ -1,3 +1,4 @@
+import { addPoints, updateRewards } from './rewards';
 import type { GameContext, GameData, Profile, ProgressStore, RecordStore } from './types';
 
 export function createGameData(records: RecordStore, gameId: string): GameData {
@@ -20,6 +21,9 @@ export function createGameContext(
     profile,
     data,
     exit,
+    addPoints: async (count) => {
+      await updateRewards(store, profile.id, (state) => addPoints(state, count));
+    },
     progress: {
       load: <T>() => store.load<T>(profile.id, gameId),
       save: <T>(data: T) => store.save(profile.id, gameId, data),

@@ -27,6 +27,8 @@ export interface PuzzleOptions {
   snapFactor?: number;
   /** Aangeroepen zodra het laatste stuk vastklikt, met de speeltijd sinds het eerste opgepakte stuk. */
   onComplete?: (timeMs: number) => void;
+  /** Aangeroepen met het aantal stukjes dat net voor het eerst is vastgeklikt (voor de spaarpunten). */
+  onLock?: (count: number) => void;
   /** Hervat vanaf deze tussenstand (die moet kloppen met `pieces`). */
   restore?: PuzzleSnapshot;
   /** Aangeroepen na elke zet, zodat de tussenstand bewaard kan worden. */
@@ -220,6 +222,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     }
 
     const dist = snapDistance((image.width / grid.cols) * scale, opts.snapFactor) / scale;
+    const lockedBefore = new Set(pieces.filter((m) => m.locked));
     const { changed, locked } = applyDrop(pieces, grid, p.group, dist);
     for (const m of changed) {
       m.el.classList.add('snapping');
@@ -232,6 +235,9 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     }
     for (const m of pieces) render(m);
     if (locked && opts.soundOn) playClick();
+    // Een vergrendeld stuk ontgrendelt nooit; hersteld uit een tussenstand telt dus niet nog eens mee.
+    const newlyLocked = pieces.filter((m) => m.locked && !lockedBefore.has(m)).length;
+    if (newlyLocked > 0) opts.onLock?.(newlyLocked);
     if (!completed && pieces.every((m) => m.locked)) {
       completed = true;
       opts.onComplete?.(elapsed());

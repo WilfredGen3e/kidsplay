@@ -205,6 +205,78 @@ Alles moet werken voor een kind dat nog niet kan lezen: plaatjes, kleuren en gel
 - Verwijderen en instellingen alleen in het ouderdeel.
 - Rustige, contrastrijke kleuren; het canvas is licht zodat de foto goed opvalt.
 
+## Beloning: het stickerboek
+
+Elk kind spaart puzzelstukjes; bij elke 50 gelegde stukjes (per profiel instelbaar) mag het een ingepakt cadeautje uit een rij kiezen en openmaken, waarna de sticker in het eigen stickerboek komt.
+
+### Sparen
+
+- Elk stukje dat vastklikt telt als 1 punt, ongeacht welk spel of welke puzzel; hetzelfde stukje telt maar één keer per puzzelpoging.
+- De drempel is per profiel in te stellen door de ouder, bijvoorbeeld 20 voor de jongste en 50 voor de oudste. Standaard: 50.
+- In het spellenoverzicht en na elke puzzel ziet het kind een spaarbalk, zoals een pot die zich vult, met daaronder hoeveel stukjes er nog nodig zijn.
+- Restpunten schuiven door: wie op 53 uitkomt, begint met 3 aan de volgende sticker.
+
+### Cadeautje kiezen
+
+1. Als de drempel gehaald is, verschijnt een feestelijk scherm met een rij van 5 tot 8 ingepakte cadeautjes in verschillende kleuren papier en strikken.
+2. Het kind kiest er één; de andere schuiven zacht weg.
+3. Het kind tikt of klikt een paar keer op het pakje om het papier open te scheuren, met geluid en papiersnippers.
+4. De sticker komt tevoorschijn, wordt groot getoond en vliegt daarna naar het stickerboek.
+5. Heeft een kind meerdere stickers verdiend, dan mag het meerdere keren achter elkaar kiezen.
+
+### Illusie van keuze
+
+Welke sticker het kind krijgt, staat al vast voordat het kiest; elk pakje bevat dus dezelfde sticker. Zo houdt de ouder grip op de volgorde en de verrassing, terwijl het kind het gevoel heeft zelf te kiezen. De niet-gekozen pakjes worden nooit geopend getoond.
+
+De volgende sticker wordt zo bepaald:
+
+- Uit de stickers die het kind nog niet heeft, op volgorde of willekeurig (ouder kiest per profiel).
+- Geen dubbele stickers tot de hele set verzameld is.
+- Is alles verzameld, dan krijgt het kind een gouden "compleet"-sticker en kan de ouder nieuwe stickers toevoegen.
+
+### Stickers beheren (ouder)
+
+Stickers zijn rond, in flippo-formaat. De ouder maakt ze in een eenvoudige flippo-editor:
+
+1. Afbeelding uploaden via slepen of een bestandskiezer (JPG, PNG, HEIC).
+2. De afbeelding verschijnt achter een rond flippo-kader; alles buiten de cirkel is gedimd zichtbaar.
+3. De ouder schuift de afbeelding met slepen op zijn plek en zoomt met een schuifbalk of trackpad-knijpen; draaien in stappen van 90° kan met een knop.
+4. Optioneel: een gekleurde rand rond de flippo kiezen, of een glitterrand voor speciale stickers.
+5. Een live voorbeeld toont de flippo op ware grootte zoals het kind hem straks ziet.
+6. Naam invullen en op Opslaan klikken.
+
+Bij opslaan maakt de app een ronde PNG van 512 × 512 pixels met transparante buitenkant. De originele afbeelding en de uitsnede (positie, zoom, draaiing) worden ook bewaard, zodat de ouder een flippo later kan aanpassen zonder opnieuw te uploaden.
+
+Verder kan de ouder:
+
+- Een zeldzaamheid kiezen per sticker: gewoon of speciaal.
+- Stickersets maken per profiel of voor iedereen. (Besluit: eerst één gedeelde set, plus per sticker de optie "alleen voor dit kind".)
+- De volgorde aanpassen door te slepen.
+- Een sticker verwijderen, zolang nog geen kind hem verdiend heeft.
+
+### Het stickerboek
+
+- Bereikbaar vanuit het spellenoverzicht via een eigen boek-icoon.
+- Pagina's om door te bladeren; het kind sleept stickers vrij op een pagina en kan ze verplaatsen.
+- Een overzichtspagina toont alle stickers uit de set, met lege silhouetten voor wat nog verdiend kan worden.
+- Albums van anderen bekijken: bovenaan het stickerboek staan de avatars van alle profielen. Tik op een broer of zus en je bladert door diens album. Dat is alleen kijken: stickers verplaatsen, weghalen of ruilen kan alleen in je eigen album. Een duidelijke kleur en naam bovenaan laten zien wiens album open is, en één tik op je eigen avatar brengt je terug.
+
+### Extra opslag
+
+| Object | Velden |
+|---|---|
+| Sticker | id, naam, originele afbeelding, ronde PNG, uitsnede (positie, zoom, draaiing), rand, zeldzaamheid, set, volgorde |
+| Spaarstand | profiel-id, punten, drempel, volgorde-modus (vast of willekeurig) |
+| Stickerboek | profiel-id, sticker-id, datum verdiend, pagina, positie |
+
+### Fasen
+
+1. Spaarstand (platform, `src/platform/rewards.ts`).
+2. Spaarbalk en drempel per profiel (ouder).
+3. Stickers beheren: flippo-editor.
+4. Cadeautjes kiezen en openmaken.
+5. Het stickerboek, inclusief albums van anderen.
+
 ## Scope, open vragen en mijlpalen
 
 ### Buiten scope voor versie 1
@@ -219,7 +291,7 @@ Alles moet werken voor een kind dat nog niet kan lezen: plaatjes, kleuren en gel
 - [ ] Klikken verkeerd gelegde stukjes ooit vast, of alleen op de juiste plek? (Voorstel: alleen juiste plek.)
 - [ ] Klassieke puzzelvorm voor alle niveaus, of rechthoeken bij 4 stukjes?
 - [ ] Mag een kind zelf het aantal stukjes kiezen, of zet de ouder dat per kind vast?
-- [ ] Welke beloning werkt voor onze kinderen: sterren, stickers of een verzamelalbum?
+- [x] Welke beloning werkt voor onze kinderen: stickerboek (zie hoofdstuk Beloning).
 - [ ] Hoe oud zijn de kinderen precies? Dat bepaalt standaard snap-afstand en aantal stukjes.
 
 ### Mijlpalen

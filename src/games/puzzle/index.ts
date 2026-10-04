@@ -131,6 +131,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       ghost: settings.ghost,
       hint: settings.hint,
       restore: fresh ? undefined : findSnapshot(progress, puzzle.id, pieces),
+      onLock: (count) => void ctx.addPoints(count).catch(() => {}),
       onProgress: (snapshot: PuzzleSnapshot) => void update((current) => saveSnapshot(current, snapshot)),
       onComplete: async (timeMs) => {
         const previous = await loadProgress();

@@ -46,6 +46,8 @@ export interface GameContext {
     load<T>(): Promise<T | undefined>;
     save<T>(data: T): Promise<void>;
   };
+  /** Spaarpunten voor het stickerboek: 1 punt per vastgeklikt stukje (of ander kleinste succes in een spel). */
+  addPoints(count: number): Promise<void>;
   /** Terug naar het spellenoverzicht (huisknop). */
   exit(): void;
 }
