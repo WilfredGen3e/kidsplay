@@ -115,6 +115,7 @@ button {
 }
 
 .home {
+  z-index: 1000;
   left: 24px;
   top: 24px;
   bottom: auto;
@@ -129,4 +130,79 @@ button {
 .game-area button {
   font-size: 160px;
   background: none;
+}
+
+/* Puzzel */
+.game-screen:has(.puzzle) {
+  padding: 0;
+}
+
+.game-area:has(.puzzle) {
+  display: block;
+  min-height: 0;
+}
+
+.puzzle {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  background: #fff8e7;
+}
+
+.puzzle-right {
+  flex-direction: row-reverse;
+}
+
+.tray {
+  flex: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 104px 0 24px;
+  background: #e7f5ff;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.board {
+  position: absolute;
+  background: #fff;
+  border: 4px dashed #adb5bd;
+  border-radius: 8px;
+  box-sizing: content-box;
+  margin: -4px;
+}
+
+.piece {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+
+.tray .piece {
+  flex: none;
+}
+
+.piece.loose,
+.piece.dragging {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 30%);
+}
+
+.piece.dragging {
+  cursor: grabbing;
+  box-shadow: 0 10px 20px rgb(0 0 0 / 35%);
+}
+
+.piece.selected {
+  outline: 6px solid #fcc419;
+  outline-offset: 2px;
 }
