@@ -23,6 +23,8 @@ export interface PuzzleOptions {
   soundOn: boolean;
   /** Factor op de snap-afstand: ruim > 1, krap < 1. */
   snapFactor?: number;
+  /** Aangeroepen zodra het laatste stuk vastklikt, met de speeltijd sinds het eerste opgepakte stuk. */
+  onComplete?: (timeMs: number) => void;
 }
 
 function shuffled<T>(items: T[]): T[] {
@@ -62,6 +64,8 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   let boardLeft = 0;
   let boardTop = 0;
   let z = 1;
+  let startedAt: number | undefined;
+  let completed = false;
   let selected: PieceState | undefined;
 
   const groupOf = (p: PieceState) => (p.where === 'tray' ? [p] : pieces.filter((q) => q.group === p.group));
@@ -110,6 +114,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   }
 
   function lift(members: PieceState[]) {
+    startedAt ??= performance.now();
     for (const m of members) {
       m.where = 'stage';
       m.el.classList.add('dragging');
@@ -152,6 +157,10 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     }
     for (const m of pieces) render(m);
     if (locked && opts.soundOn) playClick();
+    if (!completed && pieces.every((m) => m.locked)) {
+      completed = true;
+      opts.onComplete?.(performance.now() - (startedAt ?? performance.now()));
+    }
   }
 
   function select(p: PieceState | undefined) {

@@ -219,3 +219,84 @@ button {
   cursor: default;
   box-shadow: none;
 }
+
+/* Afronden */
+.celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: rgb(255 248 231 / 85%);
+}
+
+.celebration-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 64px;
+  border-radius: 40px;
+  background: #fff;
+  box-shadow: 0 12px 0 rgb(0 0 0 / 15%);
+  animation: pop 0.5s ease-out;
+}
+
+.celebration-star {
+  font-size: 140px;
+  line-height: 1;
+}
+
+.celebration-time {
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.celebration-record {
+  font-size: 72px;
+}
+
+.celebration-buttons {
+  display: flex;
+  gap: 32px;
+  margin-top: 8px;
+}
+
+.celebration-buttons .round-button {
+  min-width: 96px;
+  min-height: 96px;
+  font-size: 48px;
+  background: #ffd43b;
+}
+
+.confetti {
+  position: absolute;
+  top: -20px;
+  width: 14px;
+  height: 22px;
+  border-radius: 3px;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh) rotate(720deg);
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti {
+    display: none;
+  }
+  .celebration-card {
+    animation: none;
+  }
+}
