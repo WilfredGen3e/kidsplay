@@ -2,7 +2,12 @@ import { createGameContext, createGameData } from './platform/context';
 import type { GameModule, Profile, ProfileStore, ProgressStore, RecordStore } from './platform/types';
 import { showParentCheck } from './parent/check';
 import { showParentMenu } from './parent';
+import { startBook } from './stickers/book';
+import { startGifts } from './stickers/gifts';
+import { STICKERS_ID } from './stickers/model';
+import { loadSavings } from './stickers/status';
 import { avatarNode, el, iconButton } from './ui/dom';
+import { savingsBar } from './ui/savings';
 
 export interface AppDeps {
   profiles: ProfileStore;
@@ -58,6 +63,19 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
       avatarNode(profile.avatar, 'tile-icon'),
       el('h1', 'header-name', profile.name),
     );
+    const stickerData = createGameData(deps.records, STICKERS_ID);
+    const rewards = el('div', 'reward-row');
+    try {
+      const savings = await loadSavings(deps.progress, stickerData, profile.id);
+      const bookButton = el('button', 'book-button');
+      bookButton.type = 'button';
+      bookButton.setAttribute('aria-label', 'Stickerboek');
+      bookButton.append(el('span', 'book-button-icon', '📖'));
+      bookButton.addEventListener('click', () => void showBook(profile));
+      rewards.append(savingsBar(savings, () => void showGifts(profile)), bookButton);
+    } catch {
+      // Zonder spaarstand blijven de spellen gewoon werken.
+    }
     const grid = el('div', 'grid');
     for (const game of deps.games) {
       const saved = await deps.progress.load(profile.id, game.id);
@@ -74,7 +92,7 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
       grid.append(tile);
     }
     show(screen);
-    screen.append(header, grid);
+    screen.append(header, rewards, grid);
   }
 
   function showGame(profile: Profile, game: GameModule) {
@@ -89,8 +107,36 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
       deps.progress,
       createGameData(deps.records, game.id),
       () => void showGames(profile),
+      {
+        savings: () => loadSavings(deps.progress, createGameData(deps.records, STICKERS_ID), profile.id),
+        openGifts: () => void showGifts(profile),
+      },
     );
     cleanup = game.start(area, ctx);
+  }
+
+  function showGifts(profile: Profile) {
+    const screen = el('main', 'screen');
+    show(screen);
+    cleanup = startGifts(screen, {
+      profile,
+      progress: deps.progress,
+      data: createGameData(deps.records, STICKERS_ID),
+      onDone: () => void showGames(profile),
+      openBook: () => void showBook(profile),
+    });
+  }
+
+  async function showBook(profile: Profile) {
+    const screen = el('main', 'screen book-host');
+    const profiles = await deps.profiles.list();
+    show(screen);
+    cleanup = startBook(screen, {
+      profiles,
+      viewer: profile,
+      data: createGameData(deps.records, STICKERS_ID),
+      onBack: () => void showGames(profile),
+    });
   }
 
   return showProfiles();

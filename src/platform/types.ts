@@ -39,6 +39,16 @@ export interface RecordStore {
 }
 
 /** Wat het platform aan een spel meegeeft; het spel kent verder geen opslagdetails. */
+/** Stand van het sparen voor het stickerboek. */
+export interface SavingsInfo {
+  /** Punten richting de volgende sticker. */
+  have: number;
+  need: number;
+  remaining: number;
+  /** Cadeautjes die het kind nu mag openmaken (0 zolang er geen stickers zijn om te winnen). */
+  gifts: number;
+}
+
 export interface GameContext {
   profile: Profile;
   data: GameData;
@@ -48,6 +58,10 @@ export interface GameContext {
   };
   /** Spaarpunten voor het stickerboek: 1 punt per vastgeklikt stukje (of ander kleinste succes in een spel). */
   addPoints(count: number): Promise<void>;
+  /** Huidige spaarstand, bijvoorbeeld voor na afloop van een spel. */
+  savings(): Promise<SavingsInfo>;
+  /** Opent het cadeautjesscherm; daarna komt het kind in het spellenoverzicht. */
+  openGifts(): void;
   /** Terug naar het spellenoverzicht (huisknop). */
   exit(): void;
 }

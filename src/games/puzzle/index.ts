@@ -135,6 +135,9 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       onProgress: (snapshot: PuzzleSnapshot) => void update((current) => saveSnapshot(current, snapshot)),
       onComplete: async (timeMs) => {
         const previous = await loadProgress();
+        // De punten van de laatste stukjes staan al in de wachtrij; lezen wacht daarop.
+        const savings = await ctx.savings().catch(() => undefined);
+        if (stopped) return;
         const best = bestTime(previous, puzzle.id, pieces);
         showCelebration(root, {
           timeMs,
@@ -143,6 +146,8 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
           onAgain: () => void play(puzzle, pieces, true),
           onPick: () => void showPicker(),
           onHome: ctx.exit,
+          savings,
+          onGifts: ctx.openGifts,
         });
         void update((current) =>
           addResult(current, { puzzleId: puzzle.id, pieces, timeMs, completedAt: new Date().toISOString() }),

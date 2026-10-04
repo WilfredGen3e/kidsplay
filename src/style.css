@@ -930,3 +930,644 @@ img.preview-avatar {
   margin: 0 0 8px;
   font-size: 20px;
 }
+
+/* ---------- Beloning: spaarbalk, cadeautjes, stickerboek ---------- */
+
+.reward-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 8px;
+}
+
+.savings {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.savings-jar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.jar {
+  position: relative;
+  width: 84px;
+  height: 112px;
+  margin-top: 14px;
+  border: 5px solid #74c0fc;
+  border-radius: 14px 14px 28px 28px;
+  background: rgb(255 255 255 / 70%);
+  overflow: visible;
+}
+
+.jar-lid {
+  position: absolute;
+  top: -17px;
+  left: 8px;
+  right: 8px;
+  height: 14px;
+  border-radius: 8px;
+  background: #74c0fc;
+}
+
+.jar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 20px 20px;
+  background: linear-gradient(#ffd43b, #fab005);
+  transition: height 1.2s ease-out;
+}
+
+.jar-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #5c3d00;
+}
+
+.savings-label {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 28px;
+}
+
+.savings-label strong {
+  font-size: 48px;
+}
+
+.gift-button,
+.book-button {
+  position: relative;
+  min-width: 96px;
+  min-height: 96px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 56px;
+  line-height: 1;
+  box-shadow: 0 6px 0 rgb(0 0 0 / 20%);
+}
+
+.gift-button {
+  background: #ffd43b;
+  animation: gift-wiggle 1.6s ease-in-out infinite;
+}
+
+.gift-button-count {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: #fa5252;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+@keyframes gift-wiggle {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  70% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  80% {
+    transform: rotate(10deg) scale(1.1);
+  }
+  90% {
+    transform: rotate(-6deg) scale(1.05);
+  }
+}
+
+/* Cadeautjesscherm */
+.gift-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, #fff3bf, #ffd8a8 70%);
+}
+
+.gift-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.gift-counter {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-size: 48px;
+  font-weight: 700;
+}
+
+.gift-book {
+  right: 24px;
+  left: auto;
+  bottom: 24px;
+  min-width: 88px;
+  min-height: 88px;
+  font-size: 44px;
+}
+
+.gift-book.bounce {
+  animation: pop 0.4s ease-out;
+}
+
+.gift-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  max-width: 1100px;
+  padding: 24px;
+}
+
+.gift-choice {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  background: none;
+  animation: gift-in 0.5s ease-out backwards;
+  transition:
+    transform 0.7s ease-in,
+    opacity 0.7s ease-in;
+}
+
+.gift-choice:hover .gift {
+  transform: rotate(-4deg) scale(1.06);
+}
+
+.gift-choice.chosen .gift {
+  animation: gift-wiggle 0.5s ease-in-out;
+}
+
+.gift-choice.gone {
+  transform: translateY(110vh) rotate(25deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes gift-in {
+  from {
+    transform: translateY(-120vh) rotate(-20deg);
+  }
+}
+
+.gift {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 8px 0 rgb(0 0 0 / 20%);
+  transition: transform 0.15s;
+}
+
+.gift::before,
+.gift::after {
+  content: '';
+  position: absolute;
+  background: var(--ribbon);
+}
+
+.gift::before {
+  left: calc(50% - 10px);
+  top: 0;
+  bottom: 0;
+  width: 20px;
+}
+
+.gift::after {
+  top: calc(50% - 10px);
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+
+.gift-bow {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  z-index: 1;
+  font-size: 64px;
+  line-height: 1;
+  transform: translateX(-50%);
+}
+
+.gift-big {
+  position: relative;
+  display: block;
+  width: min(60vh, 70vw);
+  height: min(60vh, 70vw);
+  background: none;
+  animation: pop 0.5s ease-out;
+}
+
+.gift-big.shake {
+  animation: gift-shake 0.3s;
+}
+
+@keyframes gift-shake {
+  25% {
+    transform: rotate(-5deg) scale(1.03);
+  }
+  75% {
+    transform: rotate(5deg) scale(1.03);
+  }
+}
+
+.gift-sticker {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  opacity: 0;
+  transform: scale(0.3);
+  pointer-events: none;
+}
+
+.gift-big.revealed .gift-sticker {
+  opacity: 1;
+  transform: scale(1.12);
+  filter: drop-shadow(0 12px 16px rgb(0 0 0 / 30%));
+  transition:
+    transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1),
+    opacity 0.2s;
+}
+
+.gift-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 34%;
+  background: var(--paper);
+  transition:
+    transform 0.6s ease-in,
+    opacity 0.6s ease-in;
+}
+
+.strip-0 {
+  top: 0;
+  border-radius: 24px 24px 0 0;
+}
+
+.strip-1 {
+  top: 33%;
+  filter: brightness(0.93);
+}
+
+.strip-2 {
+  top: 66%;
+  border-radius: 0 0 24px 24px;
+}
+
+.gift-strip-ribbon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 5%);
+  width: 10%;
+  background: var(--ribbon);
+}
+
+.strip-0.off {
+  transform: translate(-60vw, -30vh) rotate(-40deg);
+  opacity: 0;
+}
+
+.strip-1.off {
+  transform: translate(60vw, -10vh) rotate(35deg);
+  opacity: 0;
+}
+
+.strip-2.off {
+  transform: translate(-20vw, 70vh) rotate(25deg);
+  opacity: 0;
+}
+
+.snippet {
+  position: absolute;
+  z-index: 2;
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+  pointer-events: none;
+  animation: snippet 1.1s ease-out forwards;
+}
+
+@keyframes snippet {
+  to {
+    transform: translate(var(--dx), calc(var(--dy) + 260px)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+.gift-hint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 36px;
+  transform: translateX(-50%);
+}
+
+.gift-finger {
+  font-size: 64px;
+  animation: gift-wiggle 1.2s ease-in-out infinite;
+}
+
+.tap-dot {
+  color: #ced4da;
+}
+
+.tap-dot.done {
+  color: #f08c00;
+}
+
+/* Stickerboek */
+.book-host {
+  padding: 0;
+}
+
+.book-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100vh;
+  padding: 16px 24px 16px;
+  background: color-mix(in srgb, var(--owner) 22%, #fff8e7);
+}
+
+.book-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: none;
+}
+
+.book-people {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 6px;
+}
+
+.book-person {
+  flex: none;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  box-shadow: 0 4px 0 rgb(0 0 0 / 20%);
+  opacity: 0.75;
+}
+
+.book-person.active {
+  border-color: #fff;
+  opacity: 1;
+  transform: scale(1.12);
+  outline: 4px solid var(--owner);
+}
+
+.book-avatar {
+  font-size: 40px;
+  line-height: 1;
+}
+
+img.book-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.book-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px;
+  border-radius: 40px;
+  background: var(--owner);
+  color: #fff;
+  font-size: 32px;
+  text-shadow: 0 2px 4px rgb(0 0 0 / 35%);
+}
+
+.book-page {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border-radius: 28px;
+  background: #fffdf5;
+  box-shadow:
+    0 8px 0 rgb(0 0 0 / 12%),
+    inset 0 0 0 6px var(--owner);
+  overflow: hidden;
+  user-select: none;
+}
+
+.book-sticker {
+  width: min(22vh, 15vw);
+  height: min(22vh, 15vw);
+  filter: drop-shadow(0 4px 4px rgb(0 0 0 / 25%));
+}
+
+.book-sticker.free {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.book-sticker.movable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.book-sticker.dragging {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.book-sticker.silhouette {
+  filter: brightness(0) opacity(0.12);
+}
+
+.book-overview {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  padding: 72px 24px 24px;
+  overflow-y: auto;
+}
+
+.book-count {
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.book-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 160px;
+  opacity: 0.12;
+}
+
+.book-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex: none;
+}
+
+.book-nav .round-button:disabled {
+  opacity: 0.3;
+}
+
+.book-dots {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.book-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ced4da;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.book-dot.active {
+  background: var(--owner);
+  transform: scale(1.3);
+}
+
+/* Ouder: stickers beheren */
+.sticker-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sticker-row.dragging {
+  background: #edf2ff;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+.drag-handle {
+  padding: 8px;
+  font-size: 28px;
+  color: #868e96;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.sticker-thumb {
+  width: 72px;
+  height: 72px;
+  flex: none;
+}
+
+.flippo-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-bottom: 16px;
+}
+
+.flippo-left,
+.flippo-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.flippo-left {
+  width: 340px;
+  text-align: center;
+}
+
+.flippo-right {
+  flex: 1;
+  min-width: 280px;
+}
+
+.flippo-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #212529;
+  cursor: grab;
+  touch-action: none;
+}
+
+.flippo-pic {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  pointer-events: none;
+}
+
+.flippo-mask {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle closest-side, transparent 98%, rgb(0 0 0 / 62%) 100%);
+  pointer-events: none;
+}
+
+.flippo-ring {
+  position: absolute;
+  inset: 0;
+  border: 6px solid rgb(255 255 255 / 85%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.flippo-preview {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#f1f3f5 0 25%, #fff 0 50%) 0 0 / 16px 16px;
+}
+
+.number-input {
+  width: 110px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gift-button,
+  .gift-finger,
+  .gift-choice {
+    animation: none;
+  }
+}

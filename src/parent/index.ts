@@ -1,5 +1,7 @@
 import { createGameData } from '../platform/context';
 import type { GameModule, ProfileStore, ProgressStore, RecordStore } from '../platform/types';
+import { manageStickers } from '../stickers/manage';
+import { STICKERS_ID } from '../stickers/model';
 import { el, iconButton } from '../ui/dom';
 import { showProfiles } from './profiles';
 import { showOverview } from './progress';
@@ -36,7 +38,7 @@ export function showParentMenu(root: HTMLElement, deps: ParentDeps): void {
     grid.append(b);
   };
 
-  tile('👤', 'Profielen', () => void showProfiles(root, { profiles: deps.profiles, back: menu }));
+  tile('👤', 'Profielen', () => void showProfiles(root, { profiles: deps.profiles, progress: deps.progress, records: deps.records, back: menu }));
   for (const game of deps.games) {
     if (!game.manage) continue;
     tile(game.icon, game.name, async () => {
@@ -47,6 +49,13 @@ export function showParentMenu(root: HTMLElement, deps: ParentDeps): void {
       });
     });
   }
+  tile('🎁', 'Stickers', async () => {
+    cleanup = manageStickers(root, {
+      profiles: await deps.profiles.list(),
+      data: createGameData(deps.records, STICKERS_ID),
+      back: menu,
+    });
+  });
   tile('📊', 'Voortgang', () => void showOverview(root, { ...deps, back: menu }));
 
   screen.append(grid);

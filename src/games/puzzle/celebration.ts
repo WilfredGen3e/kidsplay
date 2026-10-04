@@ -1,6 +1,9 @@
+import { spawnConfetti } from '../../ui/confetti';
 import { el, iconButton } from '../../ui/dom';
+import { savingsBar } from '../../ui/savings';
+import type { SavingsInfo } from '../../platform/types';
 import { formatTime } from './progress';
-import { playFanfare } from './sound';
+import { playFanfare } from '../../ui/sound';
 
 export interface CelebrationOptions {
   timeMs: number;
@@ -11,22 +14,16 @@ export interface CelebrationOptions {
   /** Naar de puzzelkeuze. */
   onPick?: () => void;
   onHome: () => void;
+  /** Spaarstand voor de stickerbeloning, met een knop naar de cadeautjes als er een klaarstaat. */
+  savings?: SavingsInfo;
+  onGifts?: () => void;
 }
-
-const CONFETTI_COLORS = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#4dabf7', '#9775fa', '#f783ac'];
 
 /** Feestscherm over het spel heen: confetti, ster, speeltijd en knoppen voor nog eens / naar huis. */
 export function showCelebration(parent: HTMLElement, opts: CelebrationOptions): HTMLElement {
   const overlay = el('div', 'celebration');
 
-  for (let i = 0; i < 60; i++) {
-    const piece = el('span', 'confetti');
-    piece.style.left = `${Math.random() * 100}%`;
-    piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-    piece.style.animationDelay = `${Math.random() * 2}s`;
-    piece.style.animationDuration = `${2.5 + Math.random() * 2}s`;
-    overlay.append(piece);
-  }
+  spawnConfetti(overlay);
 
   const card = el('div', 'celebration-card');
   card.append(
@@ -34,6 +31,7 @@ export function showCelebration(parent: HTMLElement, opts: CelebrationOptions): 
     el('div', 'celebration-time', `⏱️ ${formatTime(opts.timeMs)}`),
   );
   if (opts.isRecord) card.append(el('div', 'celebration-record', '🏆'));
+  if (opts.savings) card.append(savingsBar(opts.savings, opts.onGifts));
   const buttons = el('div', 'celebration-buttons');
   buttons.append(
     iconButton('🔄', 'Nog een keer', 'round-button', opts.onAgain),

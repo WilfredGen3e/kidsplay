@@ -23,3 +23,11 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **macOS `sed -i`** vraagt een extensie-argument (`sed -i ''`); plak-bewerkingen daarom met `python3` of de Edit-tool doen.
 - **vitest** toont `console.log` niet altijd; schrijf debugresultaten naar een bestand.
 - **Playwright** staat niet in het project; installeer in een tijdelijke map (`npx playwright install chromium`) voor browsercontroles.
+
+## Spaarpunten: eerst de wachtrij, dan lezen
+- **Wat:** het laatste vastgeklikte stukje geeft een punt (`ctx.addPoints`, async) en vlak daarna toont het feestscherm de spaarbalk. Zonder volgorde zag het scherm de stand van vóór dat punt.
+- **Fix:** `updateRewards` zet wijzigingen per profiel in een wachtrij en `loadRewards` wacht op die wachtrij. Roep `addPoints` dus synchroon aan (zonder tussenliggende `await`) vóór je `savings()` leest.
+
+## Playwright: IndexedDB delen tussen scripts
+- **Wat:** elk script met `chromium.launch()` begint met een lege IndexedDB, dus profielen en stickers uit een eerder script ontbraken.
+- **Fix:** `chromium.launchPersistentContext(<map>, …)` met dezelfde map in elk script.

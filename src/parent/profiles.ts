@@ -1,9 +1,14 @@
-import type { Profile, ProfileStore } from '../platform/types';
+import { createGameData } from '../platform/context';
+import { defaultRewardState, loadRewards, updateRewards } from '../platform/rewards';
+import type { Profile, ProfileStore, ProgressStore, RecordStore } from '../platform/types';
+import { removeAlbum, STICKERS_ID } from '../stickers/model';
 import { avatarNode, confirmDialog, el, iconButton, textButton } from '../ui/dom';
 import { AVATARS, COLORS, photoToAvatar } from './avatar';
 
 export interface ProfilesDeps {
   profiles: ProfileStore;
+  progress: ProgressStore;
+  records: RecordStore;
   back(): void;
 }
 
@@ -16,7 +21,7 @@ export async function showProfiles(root: HTMLElement, deps: ProfilesDeps): Promi
 
   const card = el('section', 'card');
   const head = el('div', 'card-head');
-  head.append(el('h2', '', 'Kinderen'), textButton('➕ Nieuw profiel', 'btn btn-primary', () => showEditor(root, deps)));
+  head.append(el('h2', '', 'Kinderen'), textButton('➕ Nieuw profiel', 'btn btn-primary', () => void showEditor(root, deps)));
   card.append(head);
   if (profiles.length === 0) card.append(el('p', 'muted', 'Nog geen profielen. Maak een profiel voor elk kind.'));
   for (const profile of profiles) {
@@ -32,7 +37,7 @@ export async function showProfiles(root: HTMLElement, deps: ProfilesDeps): Promi
     row.append(
       badge,
       info,
-      textButton('✏️ Wijzig', 'btn', () => showEditor(root, deps, profile)),
+      textButton('✏️ Wijzig', 'btn', () => void showEditor(root, deps, profile)),
       textButton('🗑️', 'btn btn-danger', async () => {
         const ok = await confirmDialog(root, {
           icon: '🗑️',
@@ -41,6 +46,7 @@ export async function showProfiles(root: HTMLElement, deps: ProfilesDeps): Promi
         });
         if (!ok) return;
         await deps.profiles.remove(profile.id);
+        await removeAlbum(createGameData(deps.records, STICKERS_ID), profile.id);
         await showProfiles(root, deps);
       }),
     );
@@ -50,7 +56,8 @@ export async function showProfiles(root: HTMLElement, deps: ProfilesDeps): Promi
   root.replaceChildren(screen);
 }
 
-function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Profile): void {
+async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Profile): Promise<void> {
+  const rewards = existing ? await loadRewards(deps.progress, existing.id) : defaultRewardState();
   const draft: Profile = existing
     ? { ...existing }
     : { id: `p-${Date.now().toString(36)}`, name: '', color: COLORS[0], avatar: AVATARS[0], drawerSide: 'right', soundOn: true };
@@ -145,11 +152,33 @@ function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Profile): 
   const soundRow = el('label', 'row');
   soundRow.append(el('span', 'row-label', '🔊 Geluid'), sound);
 
+  const threshold = el('input', 'text-input number-input');
+  threshold.type = 'number';
+  threshold.min = '1';
+  threshold.max = '500';
+  threshold.value = String(rewards.threshold);
+  const thresholdRow = el('label', 'row');
+  thresholdRow.append(el('span', 'row-label', '🎁 Cadeautje na zoveel stukjes'), threshold, el('span', 'muted', '🧩'));
+
+  const orderBox = el('div', 'segmented');
+  for (const [value, label] of [['fixed', '1️⃣ Op volgorde'], ['random', '🎲 Willekeurig']] as const) {
+    const b = textButton(label, `seg${rewards.order === value ? ' active' : ''}`, () => {
+      rewards.order = value;
+      orderBox.querySelectorAll('.seg').forEach((x) => x.classList.toggle('active', x === b));
+    });
+    orderBox.append(b);
+  }
+  const orderRow = el('div', 'row');
+  orderRow.append(el('span', 'row-label', '🖼️ Volgende sticker'), orderBox);
+
   const error = el('p', 'error-text');
   const save = textButton('💾 Opslaan', 'btn btn-primary btn-big', async () => {
     draft.name = draft.name.trim();
     if (!draft.name) return void (error.textContent = 'Geef het profiel een naam.');
+    const wanted = Math.round(Number(threshold.value));
+    if (!Number.isFinite(wanted) || wanted < 1 || wanted > 500) return void (error.textContent = 'Kies een aantal stukjes tussen 1 en 500.');
     await deps.profiles.put(draft);
+    await updateRewards(deps.progress, draft.id, (state) => ({ ...state, threshold: wanted, order: rewards.order }));
     await showProfiles(root, deps);
   });
 
@@ -165,6 +194,9 @@ function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Profile): 
     message,
     sideRow,
     soundRow,
+    el('h3', '', '🎁 Beloning'),
+    thresholdRow,
+    orderRow,
     error,
     save,
   );

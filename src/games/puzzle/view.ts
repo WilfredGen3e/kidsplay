@@ -3,7 +3,7 @@ import { buildPieces, computeGrid } from './grid';
 import { clampToStage, fitScale } from './layout';
 import type { PuzzleSnapshot } from './progress';
 import { generateEdges, shapeMetrics, sliceJigsaw } from './shapes';
-import { playClick } from './sound';
+import { playClick } from '../../ui/sound';
 import { applyDrop, snapDistance, type SnapPiece } from './snap';
 
 const TRAY_WIDTH = 168;

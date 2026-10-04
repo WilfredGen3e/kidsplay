@@ -19,3 +19,4 @@ cp -R src-tauri/target/release/bundle/macos/Familiespellen.app /Applications/   
 
 ## Opslag
 De gegevens staan nu in IndexedDB van de webview van de app, niet in een eigen map. Ze blijven bewaard, maar een back-up is dus niet "map kopiëren". Verplaatsen naar `~/Library/Application Support/Familiespellen/`: tweede implementatie van `ProfileStore`, `ProgressStore` en `RecordStore` (`src/platform/types.ts`) met Tauri's bestandsplug-in; de rest van de code verandert niet. Bouw dan eerst een export/import, zodat bestaande gegevens meegaan.
+- Het venster heeft `dragDropEnabled: false` zodat een plaatje slepen naar de dropzone (puzzels/stickers) in de webview werkt.
