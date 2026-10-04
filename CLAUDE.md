@@ -16,15 +16,16 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 ## Structuur
 
-Nog niet aangemaakt. Gepland:
-
-- Platform-schil: profielscherm, spellenoverzicht, ouderdeel, opslag.
-- Spelmodules: elk spel in een eigen map, aangemeld met naam en icoon.
+- `src/app.ts`: schermen (profielen → spellen → spel) en navigatie.
+- `src/platform/`: types (`GameModule`, `GameContext`, stores), registry, `storage/indexeddb.ts`, tijdelijke `seed.ts` (voorbeeldprofielen tot het ouderdeel er is).
+- `src/games/<spel>/`: elk spel een eigen module; nu alleen `dummy` als testspel.
+- Tests: `npm test` (vitest, jsdom, fake-indexeddb).
+- Nog te bouwen: ouderdeel (gear-knop is nog zonder werking).
 
 ## Status
 
 - [x] PRD vastgelegd
-- [ ] Fase 1 – Basis (profielscherm, spellenoverzicht, lokale opslag)
+- [x] Fase 1 – Basis (profielscherm, spellenoverzicht, lokale opslag)
 - [ ] Fase 2 – Puzzel speelbaar
 - [ ] Fase 3 – Echte puzzel
 - [ ] Fase 4 – Ouderdeel en voortgang
