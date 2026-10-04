@@ -1,30 +1,21 @@
-# Mac-app maken met Tauri (fase 5)
+# Mac-app (Tauri)
 
-Niet gebouwd: op de ontwikkelmachine ontbrak Rust, dus dit is niet getest. De webapp is klaar om verpakt te worden.
-
-## Voorbereiding
-1. Xcode Command Line Tools: `xcode-select --install` (staat al op deze Mac).
-2. Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, daarna een nieuwe terminal openen.
-3. In de repo: `npm install -D @tauri-apps/cli` en `npx tauri init` met:
-   - app name: `Familiespellen`
-   - window title: `Familiespellen`
-   - web assets: `../dist`
-   - dev server URL: `http://localhost:5173`
-   - dev command: `npm run dev`
-   - build command: `npm run build`
-
-## Instellen
-In `src-tauri/tauri.conf.json`:
-- venster: `"fullscreen": true`, `"title": "Familiespellen"`;
-- `bundle.identifier`: bijvoorbeeld `nl.familie.spellen`;
-- `bundle.macOS.minimumSystemVersion`: `"13.0"`;
-- een icoon: `npx tauri icon pad/naar/icoon.png`.
+De app is gebouwd met Tauri 2 (`src-tauri/`). Rust is geïnstalleerd via rustup (`~/.cargo`).
 
 ## Bouwen en gebruiken
-- Proberen: `npx tauri dev`
-- Bouwen: `npx tauri build`; de app komt in `src-tauri/target/release/bundle/macos/` en kan naar Programma's en het Dock.
-- Voor Apple Silicon én Intel: `npx tauri build --target universal-apple-darwin` (beide Rust-targets installeren: `rustup target add aarch64-apple-darwin x86_64-apple-darwin`).
+```sh
+. "$HOME/.cargo/env"        # alleen nodig in een terminal die al open stond
+npm run app:build           # eerste keer ~1–5 min; daarna sneller
+open src-tauri/target/release/bundle/macos/Familiespellen.app
+cp -R src-tauri/target/release/bundle/macos/Familiespellen.app /Applications/   # in Programma's zetten
+```
+- Proberen tijdens het bouwen: `npm run app:dev` (opent het venster op volledig scherm, net als de echte app).
+- Afsluiten uit volledig scherm: ⌘Q.
+- De app is niet ondertekend. Op een andere Mac vraagt macOS bij het eerste openen om bevestiging (rechtsklik → Open).
+- Vereist macOS 13 of nieuwer. Voor Apple Silicon én Intel in één app: `rustup target add aarch64-apple-darwin x86_64-apple-darwin` en `npx tauri build --bundles app --target universal-apple-darwin`.
 
-## Daarna
-- Opslag verplaatsen van IndexedDB naar een map: een tweede implementatie van `ProfileStore`, `ProgressStore` en `RecordStore` (`src/platform/types.ts`) met Tauri's bestandsplug-in, en die in `src/main.ts` gebruiken. De rest van de code verandert niet.
-- Let op: IndexedDB in de Tauri-webview bewaart ook, maar niet in de gewenste map; bij de overstap eerst een export/import bouwen om bestaande gegevens mee te nemen.
+## Instellingen
+`src-tauri/tauri.conf.json`: volledig scherm, identifier `nl.familie.spellen`, minimaal macOS 13. Icoon opnieuw maken: `npx tauri icon pad/naar/1024x1024.png`.
+
+## Opslag
+De gegevens staan nu in IndexedDB van de webview van de app, niet in een eigen map. Ze blijven bewaard, maar een back-up is dus niet "map kopiëren". Verplaatsen naar `~/Library/Application Support/Familiespellen/`: tweede implementatie van `ProfileStore`, `ProgressStore` en `RecordStore` (`src/platform/types.ts`) met Tauri's bestandsplug-in; de rest van de code verandert niet. Bouw dan eerst een export/import, zodat bestaande gegevens meegaan.

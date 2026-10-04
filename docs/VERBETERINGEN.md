@@ -3,10 +3,9 @@
 Lijst om samen door te nemen na het testen. Bovenaan wat ik zelf al weet.
 
 ## Nog niet gebouwd / niet getest
-- [ ] **Mac-app (Tauri):** niet gebouwd, Rust ontbreekt op deze Mac. Zie `docs/TAURI.md`.
-- [ ] **Volledig scherm** en Dock-icoon: horen bij Tauri.
-- [ ] **Opslag in een map** (`~/Library/Application Support/Familiespellen/`) in plaats van IndexedDB: komt bij Tauri; de opslag zit al achter interfaces.
-- [ ] **HEIC-foto's:** werken in WebKit (Tauri/Safari) maar niet in Chrome; nog niet op de Mac getest.
+- [ ] **Mac-app:** gebouwd en opgestart, maar de bediening in het app-venster (slepen, bestandskiezer, volledig scherm, Dock-icoon) is niet door mij bekeken. Niet ondertekend.
+- [ ] **Opslag in een map** (`~/Library/Application Support/Familiespellen/`) in plaats van IndexedDB: de opslag zit al achter interfaces; zie `docs/TAURI.md`. Gegevens uit `npm run dev` (browser) zijn niet in de app aanwezig: beide hebben een eigen opslag.
+- [ ] **HEIC-foto's:** zouden in de app (WebKit) moeten werken, maar niet getest.
 - [ ] Niet in een echte browser gecontroleerd: staande en vierkante foto's, lade links, 24–48 stukjes (prestaties, 60 fps), het eigen-foto-avatar, spookbeeld en hulpknop.
 - [ ] Het geluid (klik en fanfare) is alleen als code geschreven; niet beluisterd.
 

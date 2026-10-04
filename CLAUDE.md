@@ -8,7 +8,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 ## Technische keuzes
 
-- Webapp in TypeScript (Vite, vanilla, geen framework); nu als lokale webpagina, later verpakt met Tauri (`docs/TAURI.md`).
+- Webapp in TypeScript (Vite, vanilla, geen framework); nu als lokale webpagina, verpakt als Mac-app met Tauri 2 in `src-tauri/` (`docs/TAURI.md`).
 - Puzzel: gewone DOM-elementen met canvas-bitmaps per stuk, klassieke vorm (bezier-randen, `shapes.ts`), slepen met pointer-events op `window`.
 - Opslag: IndexedDB achter interfaces (`ProfileStore`, `ProgressStore`, `RecordStore`); later bestanden in `~/Library/Application Support/Familiespellen/`.
 - Volledig offline, geen accounts, geen tracking.
@@ -31,7 +31,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - [x] Fase 2 – Puzzel speelbaar
 - [x] Fase 3 – Echte puzzel (klassieke vormen, groepen, geluid, voltooi-animatie, tussenstand)
 - [x] Fase 4 – Ouderdeel en voortgang (oudercheck, profielen, puzzels maken, voortgang per kind)
-- [ ] Fase 5 – Mac-app (Tauri): nog niet gebouwd, zie `docs/TAURI.md`
+- [x] Fase 5 – Mac-app (Tauri): `npm run app:build`, zie `docs/TAURI.md` (opstarten getest; bediening in het venster nog niet)
 - Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
 
 ## Werkwijze
