@@ -7,7 +7,16 @@ export interface Profile {
   soundOn: boolean;
 }
 
-/** Opslag per profiel en spel; de implementatie volgt in stap 3. */
+export interface ProfileStore {
+  list(): Promise<Profile[]>;
+  get(id: string): Promise<Profile | undefined>;
+  /** Maakt het profiel aan of overschrijft het. */
+  put(profile: Profile): Promise<void>;
+  /** Verwijdert het profiel en alle voortgang daarvan. */
+  remove(id: string): Promise<void>;
+}
+
+/** Opslag per profiel en spel. */
 export interface ProgressStore {
   load<T>(profileId: string, gameId: string): Promise<T | undefined>;
   save<T>(profileId: string, gameId: string, data: T): Promise<void>;
