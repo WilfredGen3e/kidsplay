@@ -1,7 +1,7 @@
 import type { ManageContext, Profile } from '../../platform/types';
 import { avatarNode, confirmDialog, el, parentHeader as header, textButton } from '../../ui/dom';
 import { showCodeEntry, showLibrary } from './library-ui';
-import { createCropper, type Cropper } from './cropper';
+import { NO_IMAGE_ON_CLIPBOARD, createCropper, readClipboardImage, type Cropper } from './cropper';
 import { canvasToBlob, thumbnail } from './image';
 import { MAX_PIECES, MIN_PIECES, allowedPieceCounts } from './grid';
 import {
@@ -55,7 +55,20 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     // Puzzels
     const list = el('section', 'card');
     const head = el('div', 'card-head');
-    head.append(el('h2', '', 'Puzzels'), textButton('➕ Nieuwe puzzel', 'btn btn-primary', () => showEditor()));
+    head.append(
+      el('h2', '', 'Puzzels'),
+      textButton('📋 Foto plakken', 'btn btn-primary', async () => {
+        // Kopieer eerst een foto (bijvoorbeeld in Safari); deze knop maakt er meteen een puzzel van.
+        let image: Blob | undefined;
+        try {
+          image = await readClipboardImage();
+        } catch {
+          // geen toestemming: de editor toont dan het plakvak
+        }
+        showEditor(undefined, image, !image);
+      }),
+      textButton('➕ Nieuwe puzzel', 'btn', () => showEditor()),
+    );
     list.append(head);
     const back = () => void showList();
     const shared = el('div', 'row');
@@ -109,7 +122,7 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     return row;
   }
 
-  function showEditor(existing?: Puzzle) {
+  function showEditor(existing?: Puzzle, pasted?: Blob, noImage = false) {
     const screen = el('div', 'parent-screen');
     screen.append(header(existing ? 'Puzzel wijzigen' : 'Nieuwe puzzel', () => void showList()));
 
@@ -122,6 +135,8 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
         if (!name.value) name.value = fileName;
       });
       card.append(cropper.element);
+      if (pasted) void cropper.load(pasted);
+      else if (noImage) cropper.notice(NO_IMAGE_ON_CLIPBOARD);
     } else {
       const thumb = el('img', 'row-thumb big');
       thumb.src = url(existing.thumb);

@@ -2,8 +2,24 @@ import { el, textButton } from '../../ui/dom';
 import { ASPECTS, clampView, coverScale, cropFromView, zoomAround, type AspectName, type View } from './crop';
 import { cropAndScale, loadImage } from './image';
 
+/** Afbeelding van het klembord via de plakknop; gooit als er geen toestemming of geen afbeelding is. */
+export async function readClipboardImage(): Promise<Blob | undefined> {
+  for (const item of await navigator.clipboard.read()) {
+    const type = item.types.find((t) => t.startsWith('image/'));
+    if (type) return item.getType(type);
+  }
+  return undefined;
+}
+
+export const NO_IMAGE_ON_CLIPBOARD =
+  'Er zit geen foto op het klembord. Kopieer eerst een foto (houd je vinger op de foto of klik met de rechtermuisknop → Kopieer).';
+
 export interface Cropper {
   element: HTMLElement;
+  /** Gebruik deze foto (bijvoorbeeld van het klembord) alsof hij gekozen was. */
+  load(image: Blob): Promise<void>;
+  /** Toon een melding boven de uitsnede. */
+  notice(text: string): void;
   hasImage(): boolean;
   /** De gekozen uitsnede, verkleind tot maximaal MAX_IMAGE_WIDTH; alleen na `hasImage()`. */
   result(): HTMLCanvasElement;
@@ -49,14 +65,14 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
   pasteBox.spellcheck = false;
   pasteBox.setAttribute('role', 'textbox');
   pasteBox.setAttribute('aria-label', 'Plak hier een gekopieerde foto');
-  const pasteHint = '📋 Foto gekopieerd van een webpagina? Klik hier en kies rechtermuisknop → Plakken (of Ctrl/⌘+V).';
+  const pasteHint = 'Of klik hier en kies rechtermuisknop → Plakken (of Ctrl/⌘+V, of op de iPad: vinger ingedrukt houden → Plakken).';
   pasteBox.dataset.hint = pasteHint;
   pasteBox.addEventListener('beforeinput', (e) => {
     if (e.inputType !== 'insertFromPaste') e.preventDefault();
   });
   pasteBox.addEventListener('paste', (e) => {
     e.preventDefault();
-    if (!pasteImage(e)) message.textContent = 'Er zit geen foto op het klembord. Kopieer eerst een foto (rechtermuisknop → Afbeelding kopiëren).';
+    if (!pasteImage(e)) message.textContent = NO_IMAGE_ON_CLIPBOARD;
   });
   // Een plak die toch als tekst of HTML binnenkomt mag het vak niet vullen.
   pasteBox.addEventListener('input', () => pasteBox.replaceChildren());
@@ -78,7 +94,21 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
     return true;
   }
 
-  root.append(drop, pasteBox, message, cropArea);
+  // Eén tik: leest het klembord (iPad/Safari toont daarbij zelf een "Plakken"-balkje).
+  const pasteButton = textButton('📋 Foto plakken', 'btn btn-primary btn-big', async () => {
+    message.textContent = '';
+    try {
+      const image = await readClipboardImage();
+      if (image) return void (await useFile(image, ''));
+      message.textContent = NO_IMAGE_ON_CLIPBOARD;
+    } catch {
+      // Geen toestemming of geen ondersteuning: het plakvak eronder werkt altijd.
+      pasteBox.focus();
+      message.textContent = 'Plakken met de knop lukt hier niet. Houd je vinger (of rechtermuisknop) in het vak hieronder en kies Plakken.';
+    }
+  });
+
+  root.append(pasteButton, drop, pasteBox, message, cropArea);
 
   async function useFile(file: Blob, fileName = (file as File).name ?? '') {
     message.textContent = '';
@@ -189,6 +219,8 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
 
   return {
     element: root,
+    load: (image) => useFile(image, ''),
+    notice: (text) => void (message.textContent = text),
     hasImage: () => !!img,
     result: () => cropAndScale(img!, cropFromView(view, img!.naturalWidth, img!.naturalHeight, frame)),
   };

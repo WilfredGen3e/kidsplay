@@ -32,5 +32,5 @@ Foto's klaarzetten op de laptop en op andere apparaten (telefoon, iPad, nieuwe M
 - `src/games/puzzle/library.ts`: formaat, codes, ophalen, importeren (puur, `fetch` te injecteren).
 - `src/games/puzzle/library-admin.ts`: publiceren/wijzigen/verwijderen tegen een `RepoWriter`.
 - `src/games/puzzle/library-ui.ts`: schermen Bibliotheek en Code invoeren.
-- `src/games/puzzle/cropper.ts`: uitsnede-editor, gedeeld door de app en de console. Foto kiezen kan door te klikken, te slepen of te plakken (plakvak: rechtermuisknop → Plakken; Ctrl/⌘+V werkt overal behalve in tekstvelden).
+- `src/games/puzzle/cropper.ts`: uitsnede-editor, gedeeld door de app en de console. Foto kiezen kan door te klikken, te slepen of te plakken (knop 📋 Foto plakken leest het klembord in één tik, ook op de iPad; ouder → Puzzels → 📋 Foto plakken maakt er meteen een puzzel van, lokaal, zonder GitHub; plakvak: rechtermuisknop → Plakken; Ctrl/⌘+V werkt overal behalve in tekstvelden).
 - `src/beheer/github.ts` (Git Data API) en `src/beheer/main.ts` (console).
