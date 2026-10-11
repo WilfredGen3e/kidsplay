@@ -235,6 +235,17 @@ De volgende sticker wordt zo bepaald:
 - Geen dubbele stickers tot de hele set verzameld is.
 - Is alles verzameld, dan krijgt het kind een gouden "compleet"-sticker en kan de ouder nieuwe stickers toevoegen.
 
+### Sessieregel: geen punten sprokkelen met kleine puzzels
+
+Om te voorkomen dat een kind steeds opnieuw een puzzel van 4 stukjes legt voor spaarpunten:
+
+- Heeft een kind in een sessie een puzzel met N stukjes voltooid, dan zijn daarna alleen nog puzzels met **meer dan N** stukjes beschikbaar. Dat geldt voor alle puzzels. Een kleinere of even grote keuze kan dus niet meer.
+- Dezelfde puzzel met hetzelfde aantal stukjes kan daardoor in dezelfde sessie niet nog een keer; de knop "Nog een keer" verdwijnt na het voltooien.
+- Een **sessie** loopt vanaf het kiezen van een profiel tot het kind terug is op het profielenscherm (of de app sluit). Terug naar het spellenoverzicht of naar een ander spel binnen hetzelfde profiel telt nog als dezelfde sessie. De stand wordt niet bewaard.
+- Wat op slot zit, is grijs met een 🔒 en niet aan te tikken; er is geen foutmelding. Zijn alle puzzels op slot, dan toont het scherm 🌙 en een huisknop.
+- Alleen voltooide puzzels tellen. Een half gelegde puzzel op een aantal dat op slot zit, kan in dezelfde sessie ook niet worden hervat.
+- De ouder kan per profiel de verdiende stickers wissen met **🧹 Stickers resetten** (ouder → Profielen → Wijzig). De spaarstand blijft staan.
+
 ### Stickers beheren (ouder)
 
 Stickers zijn rond, in flippo-formaat. De ouder maakt ze in een eenvoudige flippo-editor:

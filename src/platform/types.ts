@@ -64,6 +64,11 @@ export interface GameContext {
   openGifts(): void;
   /** Terug naar het spellenoverzicht (huisknop). */
   exit(): void;
+  /**
+   * Geheugen voor één sessie: vanaf het kiezen van het profiel tot het kind terug is op het profielenscherm.
+   * Niet bewaard; spellen zetten hier hun eigen sleutel in.
+   */
+  session: Record<string, unknown>;
 }
 
 /** Samenvatting voor de tegel in het spellenoverzicht, bijvoorbeeld het aantal sterren. */

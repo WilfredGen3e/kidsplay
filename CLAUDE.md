@@ -21,13 +21,13 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 - `src/main.ts`: opstarten (opslag, spellen aanmelden, `init` per spel).
 - `src/app.ts`: schermen (profielen → spellen → spel) en navigatie; gear → oudercheck → ouderdeel.
-- `src/platform/`: `backup.ts` (back-up maken/terugzetten), `update.ts` (🔄 nieuwe versie ophalen in de PWA), types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
+- `src/platform/`: `backup.ts` (back-up maken/terugzetten), `GameContext.session` (geheugen voor één sessie, wordt leeg op het profielenscherm), `update.ts` (🔄 nieuwe versie ophalen in de PWA), types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
 - `src/parent/`: oudercheck (tafelsom), menu, profielbeheer (incl. drempel en volgorde van stickers), voortgangsoverzicht.
 - `src/stickers/`: beloning. `model.ts` (Sticker/AlbumEntry, opslag onder spel-id `stickers`), `logic.ts` (volgende sticker, plekken, puur en getest), `flippo.ts` (ronde PNG, rand, glitter, gouden sticker), `manage.ts` (ouder: lijst, slepen om te ordenen, editor), `gifts.ts` (cadeautjes kiezen en openscheuren), `book.ts` (stickerboek), `status.ts` (spaarstand + cadeautjes).
 - `src/ui/`: `dom.ts`, `sound.ts` (klik, fanfare, scheuren, glinster), `confetti.ts`, `savings.ts` (spaarpot), `urls.ts`.
 - `src/beheer/` + `beheer.html`: aparte beheerconsole (token, foto's delen met code, bibliotheek beheren). Zie `docs/BIBLIOTHEEK.md`.
 - `src/games/puzzle/`: het fotopuzzelspel
-  - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `cropper.ts` (uitsnede-editor), `library.ts`/`library-admin.ts`/`library-ui.ts` (gedeelde fotobibliotheek: code of alles toevoegen), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
+  - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `session.ts` (sessieregel: alleen meer stukjes dan al voltooid, puur en getest), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `cropper.ts` (uitsnede-editor), `library.ts`/`library-admin.ts`/`library-ui.ts` (gedeelde fotobibliotheek: code of alles toevoegen), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
 - `src/games/dummy/`: testspel, alleen nog voor `app.test.ts`.
 - Tests: `npm test` (vitest, jsdom, fake-indexeddb). Slepen/layout alleen te controleren in een echte browser.
 

@@ -10,7 +10,8 @@ export interface CelebrationOptions {
   /** Sneller dan de vorige beste tijd. */
   isRecord: boolean;
   soundOn: boolean;
-  onAgain: () => void;
+  /** Ontbreekt als dezelfde puzzel met dit aantal in deze sessie niet nog eens mag. */
+  onAgain?: () => void;
   /** Naar de puzzelkeuze. */
   onPick?: () => void;
   onHome: () => void;
@@ -33,9 +34,7 @@ export function showCelebration(parent: HTMLElement, opts: CelebrationOptions): 
   if (opts.isRecord) card.append(el('div', 'celebration-record', '🏆'));
   if (opts.savings) card.append(savingsBar(opts.savings, opts.onGifts));
   const buttons = el('div', 'celebration-buttons');
-  buttons.append(
-    iconButton('🔄', 'Nog een keer', 'round-button', opts.onAgain),
-  );
+  if (opts.onAgain) buttons.append(iconButton('🔄', 'Nog een keer', 'round-button', opts.onAgain));
   if (opts.onPick) buttons.append(iconButton('🧩', 'Andere puzzel', 'round-button', opts.onPick));
   buttons.append(iconButton('🏠', 'Terug', 'round-button', opts.onHome));
   card.append(buttons);

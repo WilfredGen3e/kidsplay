@@ -23,6 +23,7 @@ import {
   type PuzzleSnapshot,
 } from './progress';
 import { ensureSamplePuzzle } from './seed';
+import { allowedCounts, isAllowed, recordCompleted, sessionOf } from './session';
 import { mountPuzzle } from './view';
 
 function start(root: HTMLElement, ctx: GameContext): () => void {
@@ -60,28 +61,40 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     const [all, progress] = await Promise.all([listPuzzles(ctx.data), loadProgress()]);
     if (stopped) return;
     const puzzles = all.filter((p) => isVisibleFor(p, ctx.profile.id));
+    const session = sessionOf(ctx.session);
+    const open = puzzles.filter((p) => allowedCounts(session, p.pieceOptions).length > 0);
 
     const screen = el('div', 'picker');
     const grid = el('div', 'grid');
     if (puzzles.length === 0) {
       grid.append(el('div', 'empty-state', '🧩'));
       screen.append(grid, el('p', 'empty-hint', 'Nog geen puzzels — maak er een in het ouderdeel (⚙️).'));
+    } else if (open.length === 0) {
+      // Alles in deze sessie gedaan: geen tekst, wel een duidelijke uitgang.
+      grid.append(el('div', 'empty-state', '🌙'));
+      screen.append(grid, iconButton('🏠', 'Klaar', 'corner-button back', ctx.exit));
+      root.replaceChildren(screen);
+      return;
     }
     for (const puzzle of puzzles) {
+      const locked = allowedCounts(session, puzzle.pieceOptions).length === 0;
       const stars = (progress?.results ?? []).filter((r) => r.puzzleId === puzzle.id).length;
       const busy = (progress?.inProgress ?? []).some((s) => s.puzzleId === puzzle.id);
-      const tile = el('button', 'tile puzzle-tile');
+      const tile = el('button', `tile puzzle-tile${locked ? ' locked' : ''}`);
       tile.type = 'button';
+      tile.disabled = locked;
       tile.setAttribute('aria-label', puzzle.name);
       const img = el('img', 'puzzle-thumb');
       img.src = url(puzzle.thumb);
       img.alt = '';
       img.draggable = false;
       tile.append(img, el('span', 'tile-name', puzzle.name));
-      const badges = `${busy ? '▶️ ' : ''}${stars > 0 ? `⭐ ${stars}` : ''}`;
+      const badges = locked ? '🔒' : `${busy ? '▶️ ' : ''}${stars > 0 ? `⭐ ${stars}` : ''}`;
       tile.append(el('span', 'stars', badges));
       tile.addEventListener('click', () => {
+        const counts = allowedCounts(session, puzzle.pieceOptions);
         if (puzzle.pieceOptions.length === 1) void play(puzzle, puzzle.pieceOptions[0]);
+        else if (counts.length === 1) void play(puzzle, counts[0]);
         else showCounts(puzzle, progress);
       });
       grid.append(tile);
@@ -97,13 +110,19 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     preview.src = url(puzzle.thumb);
     preview.alt = '';
     const grid = el('div', 'grid count-grid');
+    const session = sessionOf(ctx.session);
     for (const count of puzzle.pieceOptions) {
+      const locked = !isAllowed(session, count);
       const done = (progress?.results ?? []).some((r) => r.puzzleId === puzzle.id && r.pieces === count);
       const busy = findSnapshot(progress, puzzle.id, count) !== undefined;
-      const tile = el('button', 'tile count-tile');
+      const tile = el('button', `tile count-tile${locked ? ' locked' : ''}`);
       tile.type = 'button';
+      tile.disabled = locked;
       tile.setAttribute('aria-label', `${count}`);
-      tile.append(el('span', 'tile-icon', String(count)), el('span', 'stars', `${busy ? '▶️ ' : ''}${done ? '⭐' : ''}`));
+      tile.append(
+        el('span', 'tile-icon', String(count)),
+        el('span', 'stars', locked ? '🔒' : `${busy ? '▶️ ' : ''}${done ? '⭐' : ''}`),
+      );
       tile.addEventListener('click', () => void play(puzzle, count));
       grid.append(tile);
     }
@@ -112,6 +131,8 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
   }
 
   async function play(puzzle: Puzzle, pieces: number, fresh = false) {
+    // Ook als er toch iets aangeklikt wordt wat op slot zit (bijvoorbeeld een oud scherm).
+    if (!isAllowed(sessionOf(ctx.session), pieces)) return void showPicker();
     stop();
     stop = () => {};
     const [settings, progress, image] = await Promise.all([
@@ -140,11 +161,12 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
         const savings = await ctx.savings().catch(() => undefined);
         if (stopped) return;
         const best = bestTime(previous, puzzle.id, pieces);
+        // Vanaf nu zijn in deze sessie alleen nog puzzels met méér stukjes toegestaan, dus geen "nog een keer".
+        recordCompleted(ctx.session, pieces);
         showCelebration(root, {
           timeMs,
           isRecord: best !== undefined && timeMs < best,
           soundOn: ctx.profile.soundOn,
-          onAgain: () => void play(puzzle, pieces, true),
           onPick: () => void showPicker(),
           onHome: ctx.exit,
           savings,

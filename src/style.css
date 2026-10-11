@@ -1680,3 +1680,12 @@ img.book-avatar {
   margin-top: 32px;
   font-size: 14px;
 }
+
+/* Op slot in deze sessie: grijs met slotje, niet aan te tikken */
+.tile.locked {
+  filter: grayscale(1);
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none;
+}

@@ -25,6 +25,8 @@ export interface AppDeps {
 
 export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
   let cleanup: void | (() => void);
+  // Sessie: leeft tot het kind terug is op het profielenscherm (zie GameContext.session).
+  let session: Record<string, unknown> = {};
 
   function show(...nodes: Node[]) {
     cleanup?.();
@@ -33,6 +35,7 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
   }
 
   async function showProfiles() {
+    session = {};
     const screen = el('main', 'screen');
     const grid = el('div', 'grid');
     for (const profile of await deps.profiles.list()) {
@@ -137,6 +140,7 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
         savings: () => loadSavings(deps.progress, createGameData(deps.records, STICKERS_ID), profile.id),
         openGifts: () => void showGifts(profile),
       },
+      session,
     );
     cleanup = game.start(area, ctx);
   }

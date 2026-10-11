@@ -64,3 +64,8 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Wat:** `access.test.ts` gebruikte `sessionStorage` in de standaard node-omgeving. Lokaal (Node 26) bestaat die als global, in GitHub Actions (Node 22) niet. De test faalde daar, de Pages-workflow stopte vóór het publiceren en de nieuwe versie kwam nooit online.
 - **Fix:** tests die browser-API's gebruiken krijgen `// @vitest-environment jsdom` bovenaan.
 - **Controle vóór pushen:** `npx -y node@22 node_modules/vitest/vitest.mjs run` (zelfde Node als de workflow), en na het pushen de Actions-run bekijken.
+
+## Playwright: puzzel voltooien en knoppen kiezen
+- **Voltooien:** de 💡-hulpknop legt geen stukjes, hij laat alleen zien waar er een hoort. Een puzzel voltooien in een test gaat door elk stukje van `.tray .piece` naar het midden van zijn cel op `.board` te slepen (`data-col`/`data-row`, cel = bordbreedte / aantal kolommen).
+- **Selector:** `getByRole('button', { name: 'Resetten' })` past ook op "Stickers resetten" (naam is een deelstring, hoofdletterongevoelig). Gebruik `exact: true` of een duidelijkere naam, anders klik je de verkeerde knop onder een dialoog.
+- **Test-DB:** in dev kun je in `page.evaluate` modules importeren (`await import('/src/…ts')`) om gegevens klaar te zetten, bijvoorbeeld stickers in het album.

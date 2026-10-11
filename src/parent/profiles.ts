@@ -1,7 +1,7 @@
 import { createGameData } from '../platform/context';
 import { defaultRewardState, loadRewards, updateRewards } from '../platform/rewards';
 import type { Profile, ProfileStore, ProgressStore, RecordStore } from '../platform/types';
-import { removeAlbum, STICKERS_ID } from '../stickers/model';
+import { listAlbum, removeAlbum, STICKERS_ID } from '../stickers/model';
 import { avatarNode, confirmDialog, el, iconButton, textButton } from '../ui/dom';
 import { AVATARS, COLORS, photoToAvatar } from './avatar';
 
@@ -171,6 +171,22 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
   const orderRow = el('div', 'row');
   orderRow.append(el('span', 'row-label', '🖼️ Volgende sticker'), orderBox);
 
+  // Alle verdiende stickers van dit kind weghalen (gouden stickers ook); de spaarstand blijft staan.
+  const resetNote = el('p', 'muted');
+  const resetStickers = textButton('🧹 Stickers resetten', 'btn btn-danger', async () => {
+    const stickerData = createGameData(deps.records, STICKERS_ID);
+    const earned = (await listAlbum(stickerData, draft.id)).length;
+    if (earned === 0) return void (resetNote.textContent = `${draft.name || 'Dit kind'} heeft nog geen stickers.`);
+    const ok = await confirmDialog(root, {
+      icon: '🧹',
+      message: `Alle ${earned} stickers van ${draft.name || 'dit kind'} uit het stickerboek halen? De spaarpunten blijven staan.`,
+      confirmLabel: 'Resetten',
+    });
+    if (!ok) return;
+    await removeAlbum(stickerData, draft.id);
+    resetNote.textContent = 'Het stickerboek is leeg.';
+  });
+
   const error = el('p', 'error-text');
   const save = textButton('💾 Opslaan', 'btn btn-primary btn-big', async () => {
     draft.name = draft.name.trim();
@@ -197,6 +213,7 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
     el('h3', '', '🎁 Beloning'),
     thresholdRow,
     orderRow,
+    ...(existing ? [resetStickers, resetNote] : []),
     error,
     save,
   );

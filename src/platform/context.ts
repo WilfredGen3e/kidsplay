@@ -17,11 +17,13 @@ export function createGameContext(
   data: GameData,
   exit: () => void,
   rewards: { savings: () => Promise<SavingsInfo>; openGifts: () => void },
+  session: Record<string, unknown> = {},
 ): GameContext {
   return {
     profile,
     data,
     exit,
+    session,
     savings: rewards.savings,
     openGifts: rewards.openGifts,
     addPoints: async (count) => {
