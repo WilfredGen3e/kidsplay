@@ -41,6 +41,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - [x] Fase 6 – Stickerboek (beloning), zie PRD-hoofdstuk "Beloning": spaarstand + spaarbalk + drempel per profiel, flippo-editor (ouder → Stickers), cadeautjes kiezen/openmaken, stickerboek met albums van anderen (in de browser doorgelopen met Playwright; Mac-app nog niet)
 - [x] Fase 7 – Back-up (export/import), GitHub Pages en PWA voor offline op de iPad (offline getest in Chromium; iPad zelf nog niet)
 - [x] Fase 8 – Fotobibliotheek: foto's delen vanaf de laptop (beheerconsole, token) en op andere apparaten ophalen met 5-cijferige code of via de bibliotheek, zie `docs/BIBLIOTHEEK.md` (getest in Chromium met nep-GitHub; nog niet tegen de echte GitHub)
+- [ ] Fase 9 – Grote puzzels voor volwassenen (vinkje 🧑, tot 500 stukjes, zoomen/verschuiven): stap 1 klaar (vinkje, aantallen, resolutie, geen punten/sessieregel); open: zoomen en verschuiven, lade voor veel stukjes, tussenstand vertraagd bewaren. Zie PRD-hoofdstuk "Puzzels voor volwassenen"
 - Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
 
 ## Werkwijze

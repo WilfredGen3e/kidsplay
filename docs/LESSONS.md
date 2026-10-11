@@ -75,3 +75,7 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Fix:** `src/sw.template.js` haalt elk bestand op met `new Request(file, { cache: 'reload' })` en zet het zelf in de cache (`precache()`). Controleer na het opbouwen of elk bestand `ok` was.
 - **Testen:** laad build A met een server die `max-age=600` stuurt, bouw build B met een echte (niet-weggeminificeerde) CSS-wijziging, laat de worker updaten en vergelijk de `index.html` in de nieuwe cache met `dist/index.html` (zelfde `main-*.js`).
 - **Herstel op een iPad die al leeg is:** de browser controleert `sw.js` bij elke start (`updateViaCache: 'none'`). App openen, ongeveer 10 seconden wachten, volledig sluiten en weer openen; daarna haalt de nieuwe worker alles vers op.
+
+## Puzzel gemaakt vóór het eerste profiel was onzichtbaar
+- **Wat:** `visibleFor` werd `[]` ("niemand") als er nog geen profielen bestonden, terwijl het model "iedereen, ook latere profielen" belooft. Een puzzel die je maakte vóór je een kind aanmaakte, bleef daarna onzichtbaar.
+- **Fix:** `ctx.profiles.every(...)` is bij een lege lijst waar, dus `'all'` (`manage.ts`). Gevonden doordat een browsertest de puzzel vóór het profiel aanmaakte.

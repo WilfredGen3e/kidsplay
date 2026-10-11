@@ -1,6 +1,17 @@
 import type { Rect } from './grid';
 
 export const MAX_IMAGE_WIDTH = 2048;
+/** Volwassenenpuzzels: langste zijde en totaal aantal pixels (Safari begrenst een canvas op ongeveer 16,7 miljoen). */
+export const MAX_ADULT_SIDE = 4096;
+export const MAX_ADULT_PIXELS = 12_000_000;
+
+/** Verkleiningsfactor (hoogstens 1) voor een uitsnede van `width` × `height` pixels. */
+export function targetScale(width: number, height: number, adult: boolean): number {
+  if (!adult) return Math.min(1, MAX_IMAGE_WIDTH / width);
+  const bySide = MAX_ADULT_SIDE / Math.max(width, height);
+  const byArea = Math.sqrt(MAX_ADULT_PIXELS / (width * height));
+  return Math.min(1, bySide, byArea);
+}
 
 /** Uitsnede als fracties (0–1) van de originele foto. */
 export type Crop = Rect;
@@ -28,15 +39,15 @@ export function blobToCanvas(img: HTMLImageElement | HTMLCanvasElement): HTMLCan
   return canvas;
 }
 
-/** Snijdt de uitsnede uit de foto en verkleint tot maximaal MAX_IMAGE_WIDTH pixels breed. */
-export function cropAndScale(source: HTMLImageElement | HTMLCanvasElement, crop: Crop): HTMLCanvasElement {
+/** Snijdt de uitsnede uit de foto en verkleint tot maximaal MAX_IMAGE_WIDTH pixels breed (volwassenen: zie `targetScale`). */
+export function cropAndScale(source: HTMLImageElement | HTMLCanvasElement, crop: Crop, adult = false): HTMLCanvasElement {
   const srcW = source instanceof HTMLImageElement ? source.naturalWidth : source.width;
   const srcH = source instanceof HTMLImageElement ? source.naturalHeight : source.height;
   const sx = crop.x * srcW;
   const sy = crop.y * srcH;
   const sw = crop.width * srcW;
   const sh = crop.height * srcH;
-  const scale = Math.min(1, MAX_IMAGE_WIDTH / sw);
+  const scale = targetScale(sw, sh, adult);
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(sw * scale);
   canvas.height = Math.round(sh * scale);

@@ -235,6 +235,16 @@ De volgende sticker wordt zo bepaald:
 - Geen dubbele stickers tot de hele set verzameld is.
 - Is alles verzameld, dan krijgt het kind een gouden "compleet"-sticker en kan de ouder nieuwe stickers toevoegen.
 
+### Puzzels voor volwassenen (grote puzzels)
+
+Per puzzel een vinkje **🧑 Volwassenen** in de puzzel-editor van de ouder.
+
+- **Aantallen:** 60, 100, 150, 200, 300, 400 of 500 stukjes (standaard 100, 200, 300, 500) in plaats van 4–48.
+- **Resolutie:** de foto wordt bewaard met maximaal 4096 px op de langste zijde en 12 miljoen pixels, zodat inzoomen scherp blijft (gewone puzzels: 2048 px breed).
+- **Geen spaarpunten** en **niet onder de sessieregel**: 500 stukjes zouden anders tien stickers in één keer geven.
+- **Wie ze ziet** regel je met "Zichtbaar voor".
+- **Nog te bouwen (fase 9):** zoomen en verschuiven in het speelvlak (knijpen, scrollwiel, ➕ ➖ en "Alles zien", randscrollen tijdens slepen), een lade die met honderden stukjes werkt (meerdere kolommen, filter "Randstukjes", alleen zichtbare stukjes tekenen) en de tussenstand vertraagd bewaren.
+
 ### Sessieregel: geen punten sprokkelen met kleine puzzels
 
 Om te voorkomen dat een kind steeds opnieuw een puzzel van 4 stukjes legt voor spaarpunten:

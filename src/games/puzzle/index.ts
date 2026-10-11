@@ -23,7 +23,7 @@ import {
   type PuzzleSnapshot,
 } from './progress';
 import { ensureSamplePuzzle } from './seed';
-import { allowedCounts, isAllowed, recordCompleted, sessionOf } from './session';
+import { allowedCounts, isAllowed as isAllowedCount, recordCompleted, sessionOf, type PuzzleSession } from './session';
 import { mountPuzzle } from './view';
 
 function start(root: HTMLElement, ctx: GameContext): () => void {
@@ -55,14 +55,19 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     }
   };
 
+  /** Volwassenenpuzzels vallen niet onder de sessieregel. */
+  const isAllowed = (puzzle: Puzzle, session: PuzzleSession, pieces: number) =>
+    puzzle.adult === true || isAllowedCount(session, pieces);
+  const countsFor = (puzzle: Puzzle) =>
+    puzzle.adult ? puzzle.pieceOptions : allowedCounts(sessionOf(ctx.session), puzzle.pieceOptions);
+
   async function showPicker() {
     stop();
     stop = () => {};
     const [all, progress] = await Promise.all([listPuzzles(ctx.data), loadProgress()]);
     if (stopped) return;
     const puzzles = all.filter((p) => isVisibleFor(p, ctx.profile.id));
-    const session = sessionOf(ctx.session);
-    const open = puzzles.filter((p) => allowedCounts(session, p.pieceOptions).length > 0);
+    const open = puzzles.filter((p) => countsFor(p).length > 0);
 
     const screen = el('div', 'picker');
     const grid = el('div', 'grid');
@@ -77,7 +82,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       return;
     }
     for (const puzzle of puzzles) {
-      const locked = allowedCounts(session, puzzle.pieceOptions).length === 0;
+      const locked = countsFor(puzzle).length === 0;
       const stars = (progress?.results ?? []).filter((r) => r.puzzleId === puzzle.id).length;
       const busy = (progress?.inProgress ?? []).some((s) => s.puzzleId === puzzle.id);
       const tile = el('button', `tile puzzle-tile${locked ? ' locked' : ''}`);
@@ -92,7 +97,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       const badges = locked ? '🔒' : `${busy ? '▶️ ' : ''}${stars > 0 ? `⭐ ${stars}` : ''}`;
       tile.append(el('span', 'stars', badges));
       tile.addEventListener('click', () => {
-        const counts = allowedCounts(session, puzzle.pieceOptions);
+        const counts = countsFor(puzzle);
         if (puzzle.pieceOptions.length === 1) void play(puzzle, puzzle.pieceOptions[0]);
         else if (counts.length === 1) void play(puzzle, counts[0]);
         else showCounts(puzzle, progress);
@@ -112,7 +117,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     const grid = el('div', 'grid count-grid');
     const session = sessionOf(ctx.session);
     for (const count of puzzle.pieceOptions) {
-      const locked = !isAllowed(session, count);
+      const locked = !isAllowed(puzzle, session, count);
       const done = (progress?.results ?? []).some((r) => r.puzzleId === puzzle.id && r.pieces === count);
       const busy = findSnapshot(progress, puzzle.id, count) !== undefined;
       const tile = el('button', `tile count-tile${locked ? ' locked' : ''}`);
@@ -132,7 +137,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
 
   async function play(puzzle: Puzzle, pieces: number, fresh = false) {
     // Ook als er toch iets aangeklikt wordt wat op slot zit (bijvoorbeeld een oud scherm).
-    if (!isAllowed(sessionOf(ctx.session), pieces)) return void showPicker();
+    if (!isAllowed(puzzle, sessionOf(ctx.session), pieces)) return void showPicker();
     stop();
     stop = () => {};
     const [settings, progress, image] = await Promise.all([
@@ -152,7 +157,8 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       ghost: settings.ghost,
       hint: settings.hint,
       restore: fresh ? undefined : findSnapshot(progress, puzzle.id, pieces),
-      onLock: (count) => void ctx.addPoints(count).catch(() => {}),
+      // Volwassenenpuzzels geven geen spaarpunten.
+      onLock: puzzle.adult ? undefined : (count) => void ctx.addPoints(count).catch(() => {}),
       onProgress: (snapshot: PuzzleSnapshot) => void update((current) => saveSnapshot(current, snapshot)),
       onComplete: async (timeMs) => {
         const previous = await loadProgress();
@@ -161,7 +167,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
         if (stopped) return;
         const best = bestTime(previous, puzzle.id, pieces);
         // Vanaf nu zijn in deze sessie alleen nog puzzels met méér stukjes toegestaan, dus geen "nog een keer".
-        recordCompleted(ctx.session, pieces);
+        if (!puzzle.adult) recordCompleted(ctx.session, pieces);
         showCelebration(root, {
           timeMs,
           isRecord: best !== undefined && timeMs < best,

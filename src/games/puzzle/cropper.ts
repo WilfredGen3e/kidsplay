@@ -21,8 +21,8 @@ export interface Cropper {
   /** Toon een melding boven de uitsnede. */
   notice(text: string): void;
   hasImage(): boolean;
-  /** De gekozen uitsnede, verkleind tot maximaal MAX_IMAGE_WIDTH; alleen na `hasImage()`. */
-  result(): HTMLCanvasElement;
+  /** De gekozen uitsnede, verkleind (volwassenen: hogere resolutie); alleen na `hasImage()`. */
+  result(adult?: boolean): HTMLCanvasElement;
 }
 
 /** Foto kiezen (klik of slepen) en uitsnijden met slepen en zoomen; gedeeld door de app en de beheerconsole. */
@@ -222,6 +222,6 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
     load: (image) => useFile(image, ''),
     notice: (text) => void (message.textContent = text),
     hasImage: () => !!img,
-    result: () => cropAndScale(img!, cropFromView(view, img!.naturalWidth, img!.naturalHeight, frame)),
+    result: (adult = false) => cropAndScale(img!, cropFromView(view, img!.naturalWidth, img!.naturalHeight, frame), adult),
   };
 }

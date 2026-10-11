@@ -10,6 +10,11 @@ export interface Puzzle {
   thumb: Blob;
   /** Aantallen stukjes waaruit het kind kan kiezen. */
   pieceOptions: number[];
+  /**
+   * Puzzel voor volwassenen: grotere aantallen, foto in hogere resolutie, zonder spaarpunten en
+   * zonder de sessieregel. Ontbreekt bij gewone puzzels.
+   */
+  adult?: boolean;
   /** 'all' = iedereen, ook profielen die later bijkomen. */
   visibleFor: string[] | 'all';
   createdAt: string;

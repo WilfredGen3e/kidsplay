@@ -13,6 +13,14 @@ export interface Rect {
   height: number;
 }
 
+/** Aantallen voor puzzels met het vinkje "Volwassenen"; allemaal netjes in rijen en kolommen te verdelen. */
+export const ADULT_PIECE_COUNTS = [60, 100, 150, 200, 300, 400, 500];
+export const DEFAULT_ADULT_PIECE_OPTIONS = [100, 200, 300, 500];
+
+export function isValidPieceCount(pieces: number): boolean {
+  return allowedPieceCounts().includes(pieces) || ADULT_PIECE_COUNTS.includes(pieces);
+}
+
 export function allowedPieceCounts(): number[] {
   const counts: number[] = [];
   for (let n = MIN_PIECES; n <= MAX_PIECES; n += 4) counts.push(n);
@@ -24,7 +32,7 @@ export function allowedPieceCounts(): number[] {
  * vierkante) foto zijn er minstens zoveel kolommen als rijen; staand wordt omgedraaid.
  */
 export function computeGrid(pieces: number, imageWidth: number, imageHeight: number): Grid {
-  if (!allowedPieceCounts().includes(pieces)) {
+  if (!isValidPieceCount(pieces)) {
     throw new Error(`Ongeldig aantal stukjes: ${pieces}`);
   }
   const portrait = imageHeight > imageWidth;

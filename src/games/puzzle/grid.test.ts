@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { allowedPieceCounts, buildPieces, computeGrid, pieceRect } from './grid';
+import { ADULT_PIECE_COUNTS, allowedPieceCounts, buildPieces, computeGrid, isValidPieceCount, pieceRect } from './grid';
 
 describe('computeGrid', () => {
   it('volgt de tabel uit het PRD voor een liggende 4:3-foto', () => {
@@ -50,5 +50,29 @@ describe('pieceRect / buildPieces', () => {
     expect(edges(0)).toEqual({ top: true, left: true, right: false, bottom: false });
     expect(edges(5)).toEqual({ top: false, left: false, right: false, bottom: false });
     expect(edges(11)).toEqual({ top: false, left: false, right: true, bottom: true });
+  });
+});
+
+describe('volwassenenpuzzels', () => {
+  it('verdeelt 500 stukjes netjes (20 × 25) op een liggende foto', () => {
+    expect(computeGrid(500, 4096, 2731)).toEqual({ cols: 25, rows: 20 });
+  });
+  it('draait kolommen en rijen bij een staande foto', () => {
+    expect(computeGrid(500, 2731, 4096)).toEqual({ cols: 20, rows: 25 });
+  });
+  it('geeft voor elk volwassenenaantal bijna vierkante stukjes', () => {
+    for (const n of ADULT_PIECE_COUNTS) {
+      const { cols, rows } = computeGrid(n, 4000, 3000);
+      expect(cols * rows).toBe(n);
+      const ratio = 4000 / cols / (3000 / rows);
+      expect(ratio).toBeGreaterThan(0.6);
+      expect(ratio).toBeLessThan(1.7);
+    }
+  });
+  it('kent alleen de bekende aantallen', () => {
+    expect(isValidPieceCount(500)).toBe(true);
+    expect(isValidPieceCount(48)).toBe(true);
+    expect(isValidPieceCount(499)).toBe(false);
+    expect(() => computeGrid(499, 1600, 1200)).toThrow();
   });
 });

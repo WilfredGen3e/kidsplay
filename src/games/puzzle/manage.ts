@@ -3,7 +3,7 @@ import { avatarNode, confirmDialog, el, parentHeader as header, textButton } fro
 import { showCodeEntry, showLibrary } from './library-ui';
 import { NO_IMAGE_ON_CLIPBOARD, createCropper, readClipboardImage, type Cropper } from './cropper';
 import { canvasToBlob, thumbnail } from './image';
-import { MAX_PIECES, MIN_PIECES, allowedPieceCounts } from './grid';
+import { ADULT_PIECE_COUNTS, DEFAULT_ADULT_PIECE_OPTIONS, MAX_PIECES, MIN_PIECES, allowedPieceCounts } from './grid';
 import {
   DEFAULT_PIECE_OPTIONS,
   GAME_ID,
@@ -151,16 +151,45 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     const nameRow = el('label', 'row');
     nameRow.append(el('span', 'row-label', '🏷️ Naam'), name);
 
-    const counts = new Set(existing?.pieceOptions ?? DEFAULT_PIECE_OPTIONS);
+    // Volwassenen: grotere aantallen, hogere resolutie, zoomen in het spel (nog te bouwen), geen spaarpunten.
+    let adult = existing?.adult === true;
+    const counts = new Set(existing?.pieceOptions ?? (adult ? DEFAULT_ADULT_PIECE_OPTIONS : DEFAULT_PIECE_OPTIONS));
     const countsBox = el('div', 'chips');
-    for (const n of allowedPieceCounts()) {
-      const chip = textButton(String(n), `chip${counts.has(n) ? ' active' : ''}`, () => {
-        if (counts.has(n)) counts.delete(n);
-        else counts.add(n);
-        chip.classList.toggle('active', counts.has(n));
-      });
-      countsBox.append(chip);
-    }
+    const renderCounts = () => {
+      countsBox.replaceChildren();
+      for (const n of adult ? ADULT_PIECE_COUNTS : allowedPieceCounts()) {
+        const chip = textButton(String(n), `chip${counts.has(n) ? ' active' : ''}`, () => {
+          if (counts.has(n)) counts.delete(n);
+          else counts.add(n);
+          chip.classList.toggle('active', counts.has(n));
+        });
+        countsBox.append(chip);
+      }
+    };
+    renderCounts();
+
+    const adultBox = el('input', 'switch');
+    adultBox.type = 'checkbox';
+    adultBox.checked = adult;
+    const adultNote = el('p', 'muted');
+    const showAdultNote = () => {
+      adultNote.textContent = adult
+        ? 'Grote puzzel voor volwassenen: tot 500 stukjes, foto in hogere kwaliteit, geen spaarpunten en geen sessieregel.'
+        : '';
+      if (adult && existing && existing.image.size > 0) {
+        adultNote.textContent += ' Een bestaande foto blijft in de kwaliteit waarin hij is opgeslagen; maak voor de beste kwaliteit een nieuwe puzzel.';
+      }
+    };
+    showAdultNote();
+    adultBox.addEventListener('change', () => {
+      adult = adultBox.checked;
+      counts.clear();
+      for (const n of adult ? DEFAULT_ADULT_PIECE_OPTIONS : DEFAULT_PIECE_OPTIONS) counts.add(n);
+      renderCounts();
+      showAdultNote();
+    });
+    const adultRow = el('label', 'row');
+    adultRow.append(el('span', 'row-label', '🧑 Volwassenen'), adultBox);
 
     const visible = existing ? (existing.visibleFor === 'all' ? new Set(ctx.profiles.map((p) => p.id)) : new Set(existing.visibleFor)) : new Set(ctx.profiles.map((p) => p.id));
     const visBox = el('div', 'chips');
@@ -180,17 +209,21 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     const save = textButton('💾 Opslaan', 'btn btn-primary btn-big', async () => {
       error.textContent = '';
       if (!name.value.trim()) return void (error.textContent = 'Geef de puzzel een naam.');
-      if (counts.size === 0) return void (error.textContent = `Kies minstens één aantal stukjes (${MIN_PIECES}–${MAX_PIECES}).`);
+      if (counts.size === 0) {
+        const range = adult ? `${ADULT_PIECE_COUNTS[0]}–${ADULT_PIECE_COUNTS.at(-1)}` : `${MIN_PIECES}–${MAX_PIECES}`;
+        return void (error.textContent = `Kies minstens één aantal stukjes (${range}).`);
+      }
       if (!existing && !cropper?.hasImage()) return void (error.textContent = 'Kies eerst een foto.');
       save.disabled = true;
       try {
         const pieceOptions = [...counts].sort((a, b) => a - b);
-        const visibleFor = ctx.profiles.length > 0 && ctx.profiles.every((p) => visible.has(p.id)) ? 'all' : [...visible];
+        // Zonder profielen (of als iedereen is aangevinkt) geldt 'iedereen', ook voor profielen die later bijkomen.
+        const visibleFor = ctx.profiles.every((p) => visible.has(p.id)) ? 'all' : [...visible];
         let puzzle: Puzzle;
         if (existing) {
-          puzzle = { ...existing, name: name.value.trim(), pieceOptions, visibleFor };
+          puzzle = { ...existing, name: name.value.trim(), pieceOptions, visibleFor, adult: adult || undefined };
         } else {
-          const cropped = cropper!.result();
+          const cropped = cropper!.result(adult);
           puzzle = {
             id: `${GAME_ID}-${Date.now().toString(36)}`,
             name: name.value.trim(),
@@ -198,6 +231,7 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
             thumb: await canvasToBlob(thumbnail(cropped)),
             pieceOptions,
             visibleFor,
+            ...(adult ? { adult: true } : {}),
             createdAt: new Date().toISOString(),
           };
         }
@@ -211,6 +245,8 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
 
     card.append(
       nameRow,
+      adultRow,
+      adultNote,
       el('h3', '', '🧩 Aantal stukjes om uit te kiezen'),
       countsBox,
       el('h3', '', '👧 Zichtbaar voor'),
