@@ -132,7 +132,7 @@ Een stukje klikt alleen vast als het op zijn juiste plek ligt én aansluit op de
 3. Het stukje klikt vast als minstens één van deze waar is:
     - Het is een randstukje en de zijde die aan de rand hoort ligt tegen de canvasrand.
     - Het grenst aan een stukje dat al vastgeklikt zit.
-4. Bij vastklikken schuift het stukje met een korte animatie (circa 120 ms) precies op zijn plek en klinkt een klik-geluid.
+4. Bij vastklikken schuift het stukje met een korte animatie (circa 120 ms) precies op zijn plek. Dit gebeurt bewust zonder geluid; alleen het voltooien van de puzzel heeft een geluid.
 5. Ligt het stukje niet goed, dan blijft het gewoon los liggen. Er volgt geen foutgeluid of straf.
 
 ### Losse stukjes aan elkaar
@@ -199,7 +199,7 @@ Alles moet werken voor een kind dat nog niet kan lezen: plaatjes, kleuren en gel
 
 - Grote klikvlakken: minimaal 64 × 64 pixels voor knoppen en tegels.
 - Elke knop heeft een icoon; tekst is aanvulling, nooit de enige uitleg.
-- Korte, vrolijke geluiden bij vastklikken en voltooien; geluid aan/uit per profiel.
+- Een vrolijk geluid bij voltooien (vastklikken van een stukje is stil); geluid aan/uit per profiel.
 - Geen foutmeldingen of rode kruizen; een verkeerd gelegd stukje blijft gewoon liggen.
 - Volledig scherm als standaard, zodat kinderen niet per ongeluk andere apps openen.
 - Verwijderen en instellingen alleen in het ouderdeel.

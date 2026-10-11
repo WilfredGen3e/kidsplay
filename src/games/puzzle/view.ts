@@ -3,7 +3,6 @@ import { buildPieces, computeGrid } from './grid';
 import { clampToStage, fitScale } from './layout';
 import type { PuzzleSnapshot } from './progress';
 import { generateEdges, shapeMetrics, sliceJigsaw } from './shapes';
-import { playClick } from '../../ui/sound';
 import { applyDrop, snapDistance, type SnapPiece } from './snap';
 
 const TRAY_WIDTH = 168;
@@ -22,7 +21,6 @@ export interface PuzzleOptions {
   image: HTMLCanvasElement;
   pieces: number;
   drawerSide: 'left' | 'right';
-  soundOn: boolean;
   /** Factor op de snap-afstand: ruim > 1, krap < 1. */
   snapFactor?: number;
   /** Aangeroepen zodra het laatste stuk vastklikt, met de speeltijd sinds het eerste opgepakte stuk. */
@@ -223,7 +221,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
 
     const dist = snapDistance((image.width / grid.cols) * scale, opts.snapFactor) / scale;
     const lockedBefore = new Set(pieces.filter((m) => m.locked));
-    const { changed, locked } = applyDrop(pieces, grid, p.group, dist);
+    const { changed } = applyDrop(pieces, grid, p.group, dist);
     for (const m of changed) {
       m.el.classList.add('snapping');
       setTimeout(() => m.el.classList.remove('snapping'), SNAP_ANIMATION_MS + 40);
@@ -234,7 +232,6 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       }
     }
     for (const m of pieces) render(m);
-    if (locked && opts.soundOn) playClick();
     // Een vergrendeld stuk ontgrendelt nooit; hersteld uit een tussenstand telt dus niet nog eens mee.
     const newlyLocked = pieces.filter((m) => m.locked && !lockedBefore.has(m)).length;
     if (newlyLocked > 0) opts.onLock?.(newlyLocked);

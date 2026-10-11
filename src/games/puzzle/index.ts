@@ -147,7 +147,6 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       image,
       pieces,
       drawerSide: ctx.profile.drawerSide,
-      soundOn: ctx.profile.soundOn,
       snapFactor: SNAP_FACTORS[settings.snap],
       preview: settings.preview,
       ghost: settings.ghost,
