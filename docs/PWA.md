@@ -11,6 +11,7 @@
 - `vite.config.ts` (plugin `offlineServiceWorker`) schrijft `dist/sw.js` uit `src/sw.template.js`, met versie (hash) en alle gebouwde bestanden. Cache-first; nieuwe versie wordt bij het volgende bezoek actief.
 - Registratie in `src/main.ts`, alleen in productie en alleen via http(s) (dus niet in de Tauri-app).
 - Op de iPad: open de site in Safari, Deel → **Zet op beginscherm**. Daarna werkt de app zonder internet en op volledig scherm.
+- **Icoon:** `public/icons/` (eenhoorn op paars; `icon-512.png`, `icon-192.png`, `apple-touch-icon.png`). iOS leest het icoon alleen bij het toevoegen aan het beginscherm: een nieuw icoon verschijnt pas na verwijderen en opnieuw toevoegen. Verwijderen wist de opslag van de app, dus eerst 💾 Back-up maken en daarna terugzetten.
 - `navigator.storage.persist()` wordt aangevraagd, maar Safari kan data van sites wissen. Maak af en toe een back-up.
 
 ## Nieuwe versie ophalen (🔄 linksboven)
