@@ -37,6 +37,8 @@ function offlineServiceWorker(): Plugin {
 // Relatieve paden: werkt op GitHub Pages (/kidsplay/), lokaal en in Tauri.
 export default defineConfig({
   base: './',
+  // Tijdstip van de build, zichtbaar in het ouderdeel: zo zie je op de iPad welke versie er draait.
+  define: { __BUILD__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC') },
   plugins: [offlineServiceWorker()],
   // Naast de app een aparte beheerconsole (beheer.html), niet gelinkt vanuit de app.
   build: { rollupOptions: { input: { main: 'index.html', beheer: 'beheer.html' } } },

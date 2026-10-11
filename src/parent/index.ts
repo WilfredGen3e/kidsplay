@@ -61,6 +61,6 @@ export function showParentMenu(root: HTMLElement, deps: ParentDeps): void {
   if (deps.backup) tile('💾', 'Back-up', () => showBackup(root, { ...deps.backup!, back: menu }));
   tile('📊', 'Voortgang', () => void showOverview(root, { ...deps, back: menu }));
 
-  screen.append(grid);
+  screen.append(grid, el('p', 'muted version', `Versie van ${__BUILD__}`));
   root.replaceChildren(screen);
 }

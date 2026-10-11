@@ -12,3 +12,10 @@
 - Registratie in `src/main.ts`, alleen in productie en alleen via http(s) (dus niet in de Tauri-app).
 - Op de iPad: open de site in Safari, Deel → **Zet op beginscherm**. Daarna werkt de app zonder internet en op volledig scherm.
 - `navigator.storage.persist()` wordt aangevraagd, maar Safari kan data van sites wissen. Maak af en toe een back-up.
+
+## Nieuwe versie ophalen (🔄 linksboven)
+- Op het profielenscherm staat linksboven een 🔄-knop (alleen in de webapp/PWA, niet in dev of in de Tauri-app). Tikken zoekt een nieuwe versie, haalt die op en laadt de app opnieuw. Is er niets nieuws, dan toont de knop kort ✅; zonder internet 📴.
+- Staat er op de achtergrond al een nieuwe versie klaar, dan krijgt de knop een gele rand; tikken herlaadt direct.
+- De app controleert zelf bij het openen en bij terugkeren uit de achtergrond (`visibilitychange`); een PWA op de iPad wordt zelden echt herstart.
+- Ouderdeel toont onderaan "Versie van <tijdstip van de build>" om op de iPad te zien welke versie draait.
+- Code: `src/platform/update.ts`, knop in `src/app.ts`, `sw.js` wordt met `updateViaCache: 'none'` geregistreerd.

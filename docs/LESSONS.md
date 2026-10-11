@@ -50,3 +50,12 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Eén commit:** losse Contents-API-aanroepen per bestand geven halve toestanden (foto zonder lijst). Gebruik de Git Data API (blobs → tree → commit → ref), ook voor verwijderen (`sha: null`) en voor het aanmaken van de branch zonder parent.
 - **Code hergebruiken:** een verwijderde code kan opnieuw worden uitgedeeld. De puzzel-id op het apparaat is daarom `lib-<code>-<tijd>`, niet alleen de code.
 - **Testen zonder token:** Playwright met `context.route` voor `api.github.com` en `raw.githubusercontent.com` (inclusief `OPTIONS`-preflight); de echte GitHub is nog niet doorlopen.
+
+## Nieuwe versie in een PWA: `update()` is soms al klaar als de worker actief is
+- **Wat:** na `registration.update()` stond `installing` al weer leeg, omdat `skipWaiting` de nieuwe versie direct activeert. De verversknop meldde daardoor "al de nieuwste" en laadde niet opnieuw.
+- **Fix:** luister vóór `update()` naar `updatefound` en onthoud die worker (`checkForUpdate` in `src/platform/update.ts`); wacht dan tot hij `activated` is. Een worker die al `redundant` is, geldt als mislukt.
+- **Ook:** de open pagina draait na een update nog op oude code; pas herladen geeft de nieuwe versie. Daarom herlaadt de knop zelf.
+
+## Testen van updates: minifier haalt commentaar weg
+- **Wat:** een "versie 2" maken door `/* v2 */` aan de CSS toe te voegen gaf een bytegelijke build (zelfde hash in `sw.js`), dus de update-test leek te falen.
+- **Fix:** wijzig in de test een echte regel (`.zz-test{color:red}`). Serveer `dist/` met een eenvoudige server die elk bestand vers van schijf leest: `vite preview` onthoudt bestandslijst en lengtes van het opstarten.

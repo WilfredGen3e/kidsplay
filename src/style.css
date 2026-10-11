@@ -1656,3 +1656,27 @@ img.book-avatar {
   border-color: #4c6ef5;
   background: #f3f6ff;
 }
+
+/* Verversknop: nieuwe versie van de app ophalen (alleen in de webapp/PWA) */
+.refresh {
+  top: 24px;
+  bottom: auto;
+  left: 24px;
+  opacity: 0.5;
+}
+.refresh.busy {
+  animation: refresh-spin 0.9s linear infinite;
+}
+.refresh.has-update {
+  opacity: 1;
+  box-shadow: 0 0 0 6px #ffd43b, 0 4px 0 rgb(0 0 0 / 20%);
+}
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.version {
+  margin-top: 32px;
+  font-size: 14px;
+}

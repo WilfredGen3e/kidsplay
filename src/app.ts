@@ -4,6 +4,7 @@ import type { GameModule, Profile, ProfileStore, ProgressStore, RecordStore } fr
 import { showParentCheck } from './parent/check';
 import { showParentMenu } from './parent';
 import type { BackupActions } from './parent/backup';
+import type { UpdateActions } from './platform/update';
 import { startBook } from './stickers/book';
 import { startGifts } from './stickers/gifts';
 import { STICKERS_ID } from './stickers/model';
@@ -17,6 +18,8 @@ export interface AppDeps {
   records: RecordStore;
   /** Back-up maken en terugzetten; ontbreekt in tests zonder echte opslag. */
   backup?: BackupActions;
+  /** Nieuwe versie ophalen (alleen in de webapp/PWA). */
+  update?: UpdateActions;
   games: GameModule[];
 }
 
@@ -45,6 +48,25 @@ export function startApp(root: HTMLElement, deps: AppDeps): Promise<void> {
     show(screen);
     if (grid.children.length === 0) grid.append(el('div', 'empty-state', '👋'), el('p', 'empty-hint', 'Nog geen profielen — tik op het tandwiel (⚙️) om er een te maken.'));
     screen.append(grid, gear);
+    if (deps.update) screen.append(refreshButton(deps.update));
+  }
+
+  /** Linksboven: zoekt de nieuwste versie van de app en laadt die. */
+  function refreshButton(update: UpdateActions): HTMLButtonElement {
+    const button = iconButton('🔄', 'Nieuwe versie ophalen', 'corner-button refresh', async () => {
+      if (button.classList.contains('busy')) return;
+      if (update.isReady()) return update.reload();
+      button.classList.add('busy');
+      const result = await update.check();
+      button.classList.remove('busy', 'has-update');
+      if (result === 'nieuw') return update.reload();
+      button.textContent = result === 'actueel' ? '✅' : '📴';
+      setTimeout(() => (button.textContent = '🔄'), 2500);
+    });
+    const mark = () => button.classList.add('has-update');
+    if (update.isReady()) mark();
+    update.onReady(mark);
+    return button;
   }
 
   function showParent() {

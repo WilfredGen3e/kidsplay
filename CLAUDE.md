@@ -21,7 +21,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 
 - `src/main.ts`: opstarten (opslag, spellen aanmelden, `init` per spel).
 - `src/app.ts`: schermen (profielen → spellen → spel) en navigatie; gear → oudercheck → ouderdeel.
-- `src/platform/`: `backup.ts` (back-up maken/terugzetten), types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
+- `src/platform/`: `backup.ts` (back-up maken/terugzetten), `update.ts` (🔄 nieuwe versie ophalen in de PWA), types (`GameModule`, `GameContext`, stores), registry, `rewards.ts` (spaarstand per profiel, opgeslagen onder voortgangssleutel `platform:rewards`), `storage/indexeddb.ts`.
 - `src/parent/`: oudercheck (tafelsom), menu, profielbeheer (incl. drempel en volgorde van stickers), voortgangsoverzicht.
 - `src/stickers/`: beloning. `model.ts` (Sticker/AlbumEntry, opslag onder spel-id `stickers`), `logic.ts` (volgende sticker, plekken, puur en getest), `flippo.ts` (ronde PNG, rand, glitter, gouden sticker), `manage.ts` (ouder: lijst, slepen om te ordenen, editor), `gifts.ts` (cadeautjes kiezen en openscheuren), `book.ts` (stickerboek), `status.ts` (spaarstand + cadeautjes).
 - `src/ui/`: `dom.ts`, `sound.ts` (klik, fanfare, scheuren, glinster), `confetti.ts`, `savings.ts` (spaarpot), `urls.ts`.

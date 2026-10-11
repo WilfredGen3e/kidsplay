@@ -5,6 +5,7 @@ import { getGames, registerGame } from './platform/registry';
 import { createGameData } from './platform/context';
 import { createBackup, parseBackup, restoreBackup } from './platform/backup';
 import { IndexedDbStorage } from './platform/storage/indexeddb';
+import { canSelfUpdate, createUpdateActions } from './platform/update';
 
 registerGame(puzzleGame);
 
@@ -15,6 +16,7 @@ await startApp(document.querySelector<HTMLDivElement>('#app')!, {
   progress: storage,
   records: storage.records,
   games: getGames(),
+  update: canSelfUpdate() ? createUpdateActions() : undefined,
   backup: {
     create: async () => JSON.stringify(await createBackup(storage)),
     restore: (text) => restoreBackup(storage, parseBackup(text)),
@@ -23,7 +25,8 @@ await startApp(document.querySelector<HTMLDivElement>('#app')!, {
 
 // Offline als webapp (iPad/Safari, GitHub Pages); niet in de Tauri-app, daar zit alles al in het pakket.
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && import.meta.env.PROD) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // updateViaCache 'none': sw.js zelf nooit uit de HTTP-cache (GitHub Pages cachet 10 minuten).
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
   // Vraag Safari de gegevens te bewaren; mislukt dat, dan blijft de back-up de vangrail.
   navigator.storage?.persist?.().catch(() => {});
 }
