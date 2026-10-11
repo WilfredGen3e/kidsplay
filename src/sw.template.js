@@ -2,8 +2,22 @@
 const CACHE = 'familiespellen-__VERSION__';
 const FILES = __FILES__;
 
+// Elk bestand rechtstreeks van de server (`cache: 'reload'`). `cache.addAll` leest uit de HTTP-cache: GitHub Pages
+// geeft bestanden 10 minuten max-age, en dan belandde een oude index.html in de cache van de nieuwe versie, met
+// verwijzingen naar bestanden die al van de server waren. Gevolg: een kaal scherm.
+async function precache() {
+  const cache = await caches.open(CACHE);
+  await Promise.all(
+    FILES.map(async (file) => {
+      const response = await fetch(new Request(file, { cache: 'reload' }));
+      if (!response.ok) throw new Error(`${file}: ${response.status}`);
+      await cache.put(file, response);
+    }),
+  );
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {

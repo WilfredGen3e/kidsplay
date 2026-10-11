@@ -20,3 +20,6 @@
 - De app controleert zelf bij het openen en bij terugkeren uit de achtergrond (`visibilitychange`); een PWA op de iPad wordt zelden echt herstart.
 - Ouderdeel toont onderaan "Versie van <tijdstip van de build>" om op de iPad te zien welke versie draait.
 - Code: `src/platform/update.ts`, knop in `src/app.ts`, `sw.js` wordt met `updateViaCache: 'none'` geregistreerd.
+
+## Precache haalt bestanden altijd vers van de server
+`sw.js` gebruikt `fetch(..., { cache: 'reload' })` per bestand, zodat een nieuwe versie nooit een oude `index.html` (of ander bestand) uit de HTTP-cache van GitHub Pages overneemt. Zie `docs/LESSONS.md` ("kaal scherm na een update").
