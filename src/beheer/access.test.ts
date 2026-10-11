@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it } from 'vitest';
 import { isAccessCode, isUnlocked, markUnlocked } from './access';
 
 describe('toegangscode', () => {
+  beforeEach(() => sessionStorage.clear());
+
   it('accepteert 6402, ook met spaties of streepjes', () => {
     expect(isAccessCode('6402')).toBe(true);
     expect(isAccessCode(' 64 02 ')).toBe(true);

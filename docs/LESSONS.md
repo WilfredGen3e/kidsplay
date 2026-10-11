@@ -59,3 +59,8 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## Testen van updates: minifier haalt commentaar weg
 - **Wat:** een "versie 2" maken door `/* v2 */` aan de CSS toe te voegen gaf een bytegelijke build (zelfde hash in `sw.js`), dus de update-test leek te falen.
 - **Fix:** wijzig in de test een echte regel (`.zz-test{color:red}`). Serveer `dist/` met een eenvoudige server die elk bestand vers van schijf leest: `vite preview` onthoudt bestandslijst en lengtes van het opstarten.
+
+## CI faalde terwijl lokaal alles slaagde: Node-versie
+- **Wat:** `access.test.ts` gebruikte `sessionStorage` in de standaard node-omgeving. Lokaal (Node 26) bestaat die als global, in GitHub Actions (Node 22) niet. De test faalde daar, de Pages-workflow stopte vóór het publiceren en de nieuwe versie kwam nooit online.
+- **Fix:** tests die browser-API's gebruiken krijgen `// @vitest-environment jsdom` bovenaan.
+- **Controle vóór pushen:** `npx -y node@22 node_modules/vitest/vitest.mjs run` (zelfde Node als de workflow), en na het pushen de Actions-run bekijken.
