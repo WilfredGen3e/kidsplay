@@ -1571,3 +1571,69 @@ img.book-avatar {
     animation: none;
   }
 }
+
+/* Bibliotheek met gedeelde foto's (app en beheerconsole) */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.library-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  min-height: 64px;
+  padding: 8px;
+  border: 2px solid #d8dde6;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.library-tile.added {
+  opacity: 0.8;
+  cursor: default;
+}
+.library-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #eef1f5;
+}
+.library-badge {
+  font-size: 0.9rem;
+}
+.code-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 2px solid #d8dde6;
+  border-radius: 12px;
+  font: 700 2.4rem/1.2 ui-monospace, monospace;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+.code-result {
+  margin-top: 12px;
+  max-width: 260px;
+}
+.code-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #eef1f5;
+  font: 700 1.3rem ui-monospace, monospace;
+  letter-spacing: 0.15em;
+}
+.code-big {
+  font: 800 3.2rem/1.2 ui-monospace, monospace;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+.console-note {
+  font-size: 0.9rem;
+}

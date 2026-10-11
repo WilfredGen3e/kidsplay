@@ -1,7 +1,8 @@
 import type { ManageContext, Profile } from '../../platform/types';
-import { avatarNode, confirmDialog, el, iconButton, textButton } from '../../ui/dom';
-import { ASPECTS, clampView, coverScale, cropFromView, zoomAround, type AspectName, type View } from './crop';
-import { canvasToBlob, cropAndScale, loadImage, thumbnail } from './image';
+import { avatarNode, confirmDialog, el, parentHeader as header, textButton } from '../../ui/dom';
+import { showCodeEntry, showLibrary } from './library-ui';
+import { createCropper, type Cropper } from './cropper';
+import { canvasToBlob, thumbnail } from './image';
 import { MAX_PIECES, MIN_PIECES, allowedPieceCounts } from './grid';
 import {
   DEFAULT_PIECE_OPTIONS,
@@ -56,6 +57,13 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     const head = el('div', 'card-head');
     head.append(el('h2', '', 'Puzzels'), textButton('➕ Nieuwe puzzel', 'btn btn-primary', () => showEditor()));
     list.append(head);
+    const back = () => void showList();
+    const shared = el('div', 'row');
+    shared.append(
+      textButton('📚 Bibliotheek', 'btn', () => showLibrary(root, ctx, back)),
+      textButton('🔢 Code invoeren', 'btn', () => showCodeEntry(root, ctx, back)),
+    );
+    list.append(shared);
     if (puzzles.length === 0) list.append(el('p', 'muted', 'Nog geen puzzels. Maak er een van een eigen foto.'));
     for (const puzzle of puzzles) {
       const row = el('div', 'puzzle-row');
@@ -106,135 +114,18 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     screen.append(header(existing ? 'Puzzel wijzigen' : 'Nieuwe puzzel', () => void showList()));
 
     const card = el('section', 'card');
-    let img: HTMLImageElement | undefined;
-    let aspect: AspectName = 'liggend';
-    let view: View = { scale: 1, x: 0, y: 0 };
-    let frame = { width: 560, height: 420 };
-    const cropArea = el('div', 'crop-area');
-    const message = el('p', 'muted');
+    let cropper: Cropper | undefined;
 
     // --- foto kiezen (alleen bij een nieuwe puzzel)
     if (!existing) {
-      const drop = el('label', 'dropzone');
-      drop.append(el('span', 'dropzone-icon', '📷'), el('span', '', 'Sleep een foto hierheen of klik om te kiezen (JPG, PNG, HEIC)'));
-      const input = el('input');
-      input.type = 'file';
-      input.accept = 'image/jpeg,image/png,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png';
-      input.hidden = true;
-      drop.append(input);
-      drop.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        drop.classList.add('over');
+      cropper = createCropper((fileName) => {
+        if (!name.value) name.value = fileName;
       });
-      drop.addEventListener('dragleave', () => drop.classList.remove('over'));
-      drop.addEventListener('drop', (e) => {
-        e.preventDefault();
-        drop.classList.remove('over');
-        const file = e.dataTransfer?.files[0];
-        if (file) void useFile(file);
-      });
-      input.addEventListener('change', () => {
-        if (input.files?.[0]) void useFile(input.files[0]);
-      });
-      card.append(drop, message, cropArea);
+      card.append(cropper.element);
     } else {
       const thumb = el('img', 'row-thumb big');
       thumb.src = url(existing.thumb);
       card.append(thumb);
-    }
-
-    async function useFile(file: File) {
-      message.textContent = '';
-      try {
-        img = await loadImage(file);
-      } catch {
-        img = undefined;
-        message.textContent = 'Deze foto kan niet worden gelezen. Probeer een JPG of PNG.';
-        cropArea.replaceChildren();
-        return;
-      }
-      if (!name.value) name.value = file.name.replace(/\.[^.]+$/, '');
-      resetView();
-      renderCrop();
-    }
-
-    function frameFor(a: AspectName) {
-      const ratio = ASPECTS[a].ratio;
-      return ratio >= 1 ? { width: 560, height: Math.round(560 / ratio) } : { width: Math.round(420 * ratio), height: 420 };
-    }
-
-    function resetView() {
-      if (!img) return;
-      frame = frameFor(aspect);
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      const scale = coverScale(w, h, frame);
-      view = clampView({ scale, x: (frame.width - w * scale) / 2, y: (frame.height - h * scale) / 2 }, w, h, frame);
-    }
-
-    function renderCrop() {
-      if (!img) return;
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
-      const box = el('div', 'crop-frame');
-      box.style.width = `${frame.width}px`;
-      box.style.height = `${frame.height}px`;
-      const pic = el('img', 'crop-img');
-      pic.draggable = false;
-      const apply = () => {
-        pic.style.width = `${w * view.scale}px`;
-        pic.style.height = `${h * view.scale}px`;
-        pic.style.transform = `translate(${view.x}px, ${view.y}px)`;
-      };
-      // Het origineel blijft in het geheugen; de weergave gebruikt een eigen URL.
-      const src = urlOfImage(img);
-      pic.src = src;
-      apply();
-      box.append(pic);
-
-      let drag: { x: number; y: number; vx: number; vy: number } | undefined;
-      box.addEventListener('pointerdown', (e) => {
-        box.setPointerCapture(e.pointerId);
-        drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
-      });
-      box.addEventListener('pointermove', (e) => {
-        if (!drag) return;
-        view = clampView({ ...view, x: drag.vx + e.clientX - drag.x, y: drag.vy + e.clientY - drag.y }, w, h, frame);
-        apply();
-      });
-      box.addEventListener('pointerup', () => (drag = undefined));
-
-      const min = coverScale(w, h, frame);
-      const zoom = el('input', 'zoom');
-      zoom.type = 'range';
-      zoom.min = String(min);
-      zoom.max = String(min * 4);
-      zoom.step = String(min / 100);
-      zoom.value = String(view.scale);
-      const setZoom = (scale: number) => {
-        view = zoomAround(view, Math.min(min * 4, Math.max(min, scale)), { x: frame.width / 2, y: frame.height / 2 }, w, h, frame);
-        zoom.value = String(view.scale);
-        apply();
-      };
-      zoom.addEventListener('input', () => setZoom(Number(zoom.value)));
-      box.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        setZoom(view.scale * Math.exp(-e.deltaY * 0.01));
-      }, { passive: false });
-
-      const aspects = el('div', 'segmented');
-      for (const key of Object.keys(ASPECTS) as AspectName[]) {
-        aspects.append(
-          textButton(`${ASPECTS[key].icon} ${key[0].toUpperCase()}${key.slice(1)}`, `seg${key === aspect ? ' active' : ''}`, () => {
-            aspect = key;
-            resetView();
-            renderCrop();
-          }),
-        );
-      }
-      const controls = el('div', 'row');
-      controls.append(el('span', 'row-label', '🔍 Zoom'), zoom);
-      cropArea.replaceChildren(aspects, box, controls, el('p', 'muted', 'Sleep de foto en zoom tot het belangrijke deel in beeld is.'));
     }
 
     // --- naam, aantallen, zichtbaarheid
@@ -275,7 +166,7 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
       error.textContent = '';
       if (!name.value.trim()) return void (error.textContent = 'Geef de puzzel een naam.');
       if (counts.size === 0) return void (error.textContent = `Kies minstens één aantal stukjes (${MIN_PIECES}–${MAX_PIECES}).`);
-      if (!existing && !img) return void (error.textContent = 'Kies eerst een foto.');
+      if (!existing && !cropper?.hasImage()) return void (error.textContent = 'Kies eerst een foto.');
       save.disabled = true;
       try {
         const pieceOptions = [...counts].sort((a, b) => a - b);
@@ -284,7 +175,7 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
         if (existing) {
           puzzle = { ...existing, name: name.value.trim(), pieceOptions, visibleFor };
         } else {
-          const cropped = cropAndScale(img!, cropFromView(view, img!.naturalWidth, img!.naturalHeight, frame));
+          const cropped = cropper!.result();
           puzzle = {
             id: `${GAME_ID}-${Date.now().toString(36)}`,
             name: name.value.trim(),
@@ -316,32 +207,10 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
     root.replaceChildren(screen);
   }
 
-  const imageUrls = new WeakMap<HTMLImageElement, string>();
-  function urlOfImage(image: HTMLImageElement): string {
-    // loadImage geeft al een geladen element; maak een eigen kopie als URL voor de weergave.
-    let u = imageUrls.get(image);
-    if (!u) {
-      const canvas = document.createElement('canvas');
-      const k = Math.min(1, 1600 / image.naturalWidth);
-      canvas.width = Math.round(image.naturalWidth * k);
-      canvas.height = Math.round(image.naturalHeight * k);
-      canvas.getContext('2d')!.drawImage(image, 0, 0, canvas.width, canvas.height);
-      u = canvas.toDataURL('image/jpeg', 0.85);
-      imageUrls.set(image, u);
-    }
-    return u;
-  }
-
   void showList();
   return () => {
     for (const u of urls) URL.revokeObjectURL(u);
   };
-}
-
-function header(title: string, onBack: () => void): HTMLElement {
-  const h = el('header', 'parent-header');
-  h.append(iconButton('⬅️', 'Terug', 'round-button', onBack), el('h1', '', title));
-  return h;
 }
 
 function visibleSummary(puzzle: Puzzle, profiles: Profile[]): string {

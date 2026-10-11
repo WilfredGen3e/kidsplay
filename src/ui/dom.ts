@@ -59,3 +59,10 @@ export function confirmDialog(
     parent.append(overlay);
   });
 }
+
+/** Kop van een ouderscherm: terugknop en titel. */
+export function parentHeader(title: string, onBack: () => void): HTMLElement {
+  const h = el('header', 'parent-header');
+  h.append(iconButton('⬅️', 'Terug', 'round-button', onBack), el('h1', '', title));
+  return h;
+}

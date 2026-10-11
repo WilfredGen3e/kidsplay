@@ -44,3 +44,9 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## Puzzelvorm: bekijk het resultaat, niet alleen de tests
 - **Wat:** de eerste nop (smalle stok met klein kopje) voldeed aan alle tests (randen passen, binnen de bitmap) maar zag er mager uit.
 - **Fix:** klassieke vorm in `shapes.ts` (`knob`: drie bezier-bochten, hals + ronde kop + zachte golf in de rand). Tweak de vorm aan de hand van een screenshot: teken `piecePath` voor een raster op een canvas in een echte browser.
+
+## Bibliotheek: GitHub als opslag (valkuilen vooraf uitgezocht)
+- **Cache:** `raw.githubusercontent.com` cachet een paar minuten. Een net gedeelde foto ontbrak daardoor in de lijst. Fix: `?t=<tijd>` achter `index.json` en `puzzle.json` (`rawUrl(..., bust)`). Voor schrijven/lezen in de console de API gebruiken, niet raw.
+- **Eén commit:** losse Contents-API-aanroepen per bestand geven halve toestanden (foto zonder lijst). Gebruik de Git Data API (blobs → tree → commit → ref), ook voor verwijderen (`sha: null`) en voor het aanmaken van de branch zonder parent.
+- **Code hergebruiken:** een verwijderde code kan opnieuw worden uitgedeeld. De puzzel-id op het apparaat is daarom `lib-<code>-<tijd>`, niet alleen de code.
+- **Testen zonder token:** Playwright met `context.route` voor `api.github.com` en `raw.githubusercontent.com` (inclusief `OPTIONS`-preflight); de echte GitHub is nog niet doorlopen.

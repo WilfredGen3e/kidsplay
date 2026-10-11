@@ -35,4 +35,9 @@ function offlineServiceWorker(): Plugin {
 }
 
 // Relatieve paden: werkt op GitHub Pages (/kidsplay/), lokaal en in Tauri.
-export default defineConfig({ base: './', plugins: [offlineServiceWorker()] });
+export default defineConfig({
+  base: './',
+  plugins: [offlineServiceWorker()],
+  // Naast de app een aparte beheerconsole (beheer.html), niet gelinkt vanuit de app.
+  build: { rollupOptions: { input: { main: 'index.html', beheer: 'beheer.html' } } },
+});

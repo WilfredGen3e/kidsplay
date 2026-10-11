@@ -1,0 +1,158 @@
+import { el, textButton } from '../../ui/dom';
+import { ASPECTS, clampView, coverScale, cropFromView, zoomAround, type AspectName, type View } from './crop';
+import { cropAndScale, loadImage } from './image';
+
+export interface Cropper {
+  element: HTMLElement;
+  hasImage(): boolean;
+  /** De gekozen uitsnede, verkleind tot maximaal MAX_IMAGE_WIDTH; alleen na `hasImage()`. */
+  result(): HTMLCanvasElement;
+}
+
+/** Foto kiezen (klik of slepen) en uitsnijden met slepen en zoomen; gedeeld door de app en de beheerconsole. */
+export function createCropper(onFile?: (fileName: string) => void): Cropper {
+  let img: HTMLImageElement | undefined;
+  let aspect: AspectName = 'liggend';
+  let view: View = { scale: 1, x: 0, y: 0 };
+  let frame = { width: 560, height: 420 };
+  const root = el('div', 'cropper');
+  const cropArea = el('div', 'crop-area');
+  const message = el('p', 'muted');
+  const imageUrls = new WeakMap<HTMLImageElement, string>();
+
+  const drop = el('label', 'dropzone');
+  drop.append(el('span', 'dropzone-icon', '📷'), el('span', '', 'Sleep een foto hierheen of klik om te kiezen (JPG, PNG, HEIC)'));
+  const input = el('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/heic,image/heif,.heic,.heif,.jpg,.jpeg,.png';
+  input.hidden = true;
+  drop.append(input);
+  drop.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    drop.classList.add('over');
+  });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('over');
+    const file = e.dataTransfer?.files[0];
+    if (file) void useFile(file);
+  });
+  input.addEventListener('change', () => {
+    if (input.files?.[0]) void useFile(input.files[0]);
+  });
+  root.append(drop, message, cropArea);
+
+  async function useFile(file: File) {
+    message.textContent = '';
+    try {
+      img = await loadImage(file);
+    } catch {
+      img = undefined;
+      message.textContent = 'Deze foto kan niet worden gelezen. Probeer een JPG of PNG.';
+      cropArea.replaceChildren();
+      return;
+    }
+    onFile?.(file.name.replace(/\.[^.]+$/, ''));
+    resetView();
+    renderCrop();
+  }
+
+  function frameFor(a: AspectName) {
+    const ratio = ASPECTS[a].ratio;
+    return ratio >= 1 ? { width: 560, height: Math.round(560 / ratio) } : { width: Math.round(420 * ratio), height: 420 };
+  }
+
+  function resetView() {
+    if (!img) return;
+    frame = frameFor(aspect);
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const scale = coverScale(w, h, frame);
+    view = clampView({ scale, x: (frame.width - w * scale) / 2, y: (frame.height - h * scale) / 2 }, w, h, frame);
+  }
+
+  function renderCrop() {
+    if (!img) return;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const box = el('div', 'crop-frame');
+    box.style.width = `${frame.width}px`;
+    box.style.height = `${frame.height}px`;
+    const pic = el('img', 'crop-img');
+    pic.draggable = false;
+    const apply = () => {
+      pic.style.width = `${w * view.scale}px`;
+      pic.style.height = `${h * view.scale}px`;
+      pic.style.transform = `translate(${view.x}px, ${view.y}px)`;
+    };
+    pic.src = urlOfImage(img);
+    apply();
+    box.append(pic);
+
+    let drag: { x: number; y: number; vx: number; vy: number } | undefined;
+    box.addEventListener('pointerdown', (e) => {
+      box.setPointerCapture(e.pointerId);
+      drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    });
+    box.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      view = clampView({ ...view, x: drag.vx + e.clientX - drag.x, y: drag.vy + e.clientY - drag.y }, w, h, frame);
+      apply();
+    });
+    box.addEventListener('pointerup', () => (drag = undefined));
+
+    const min = coverScale(w, h, frame);
+    const zoom = el('input', 'zoom');
+    zoom.type = 'range';
+    zoom.min = String(min);
+    zoom.max = String(min * 4);
+    zoom.step = String(min / 100);
+    zoom.value = String(view.scale);
+    const setZoom = (scale: number) => {
+      view = zoomAround(view, Math.min(min * 4, Math.max(min, scale)), { x: frame.width / 2, y: frame.height / 2 }, w, h, frame);
+      zoom.value = String(view.scale);
+      apply();
+    };
+    zoom.addEventListener('input', () => setZoom(Number(zoom.value)));
+    box.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      setZoom(view.scale * Math.exp(-e.deltaY * 0.01));
+    }, { passive: false });
+
+    const aspects = el('div', 'segmented');
+    for (const key of Object.keys(ASPECTS) as AspectName[]) {
+      aspects.append(
+        textButton(`${ASPECTS[key].icon} ${key[0].toUpperCase()}${key.slice(1)}`, `seg${key === aspect ? ' active' : ''}`, () => {
+          aspect = key;
+          resetView();
+          renderCrop();
+        }),
+      );
+    }
+    const controls = el('div', 'row');
+    controls.append(el('span', 'row-label', '🔍 Zoom'), zoom);
+    cropArea.replaceChildren(aspects, box, controls, el('p', 'muted', 'Sleep de foto en zoom tot het belangrijke deel in beeld is.'));
+  }
+
+  // De weergave gebruikt een verkleinde kopie; het origineel blijft voor de uitsnede in het geheugen.
+  function urlOfImage(image: HTMLImageElement): string {
+    let u = imageUrls.get(image);
+    if (!u) {
+      const canvas = document.createElement('canvas');
+      const k = Math.min(1, 1600 / image.naturalWidth);
+      canvas.width = Math.round(image.naturalWidth * k);
+      canvas.height = Math.round(image.naturalHeight * k);
+      canvas.getContext('2d')!.drawImage(image, 0, 0, canvas.width, canvas.height);
+      u = canvas.toDataURL('image/jpeg', 0.85);
+      imageUrls.set(image, u);
+    }
+    return u;
+  }
+
+  return {
+    element: root,
+    hasImage: () => !!img,
+    result: () => cropAndScale(img!, cropFromView(view, img!.naturalWidth, img!.naturalHeight, frame)),
+  };
+}

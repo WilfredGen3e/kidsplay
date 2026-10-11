@@ -13,6 +13,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - Opslag: IndexedDB achter interfaces (`ProfileStore`, `ProgressStore`, `RecordStore`); later bestanden in `~/Library/Application Support/Familiespellen/`.
 - Volledig offline, geen accounts, geen tracking.
 - Ook als webapp/PWA (iPad): `vite.config.ts` schrijft `dist/sw.js` (uit `src/sw.template.js`) met alle bestanden; `public/manifest.webmanifest` + iconen. GitHub Actions (`.github/workflows/pages.yml`) bouwt en publiceert naar Pages. Zie `docs/PWA.md`.
+- Foto's delen tussen apparaten: branch `fotos` op GitHub, lezen via raw.githubusercontent.com, schrijven alleen met token in `beheer.html`.
 - Back-up: ouder → 💾 Back-up downloadt/herstelt alles als één JSON (`src/platform/backup.ts`, Blobs als base64).
 - Doelgroep 4–10 jaar: grote klikvlakken (min. 64×64 px), iconen i.p.v. tekst, geen foutmeldingen.
 
@@ -24,8 +25,9 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - `src/parent/`: oudercheck (tafelsom), menu, profielbeheer (incl. drempel en volgorde van stickers), voortgangsoverzicht.
 - `src/stickers/`: beloning. `model.ts` (Sticker/AlbumEntry, opslag onder spel-id `stickers`), `logic.ts` (volgende sticker, plekken, puur en getest), `flippo.ts` (ronde PNG, rand, glitter, gouden sticker), `manage.ts` (ouder: lijst, slepen om te ordenen, editor), `gifts.ts` (cadeautjes kiezen en openscheuren), `book.ts` (stickerboek), `status.ts` (spaarstand + cadeautjes).
 - `src/ui/`: `dom.ts`, `sound.ts` (klik, fanfare, scheuren, glinster), `confetti.ts`, `savings.ts` (spaarpot), `urls.ts`.
+- `src/beheer/` + `beheer.html`: aparte beheerconsole (token, foto's delen met code, bibliotheek beheren). Zie `docs/BIBLIOTHEEK.md`.
 - `src/games/puzzle/`: het fotopuzzelspel
-  - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
+  - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `cropper.ts` (uitsnede-editor), `library.ts`/`library-admin.ts`/`library-ui.ts` (gedeelde fotobibliotheek: code of alles toevoegen), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
 - `src/games/dummy/`: testspel, alleen nog voor `app.test.ts`.
 - Tests: `npm test` (vitest, jsdom, fake-indexeddb). Slepen/layout alleen te controleren in een echte browser.
 
@@ -38,6 +40,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - [x] Fase 5 – Mac-app (Tauri): `npm run app:build`, zie `docs/TAURI.md` (opstarten getest; bediening in het venster nog niet)
 - [x] Fase 6 – Stickerboek (beloning), zie PRD-hoofdstuk "Beloning": spaarstand + spaarbalk + drempel per profiel, flippo-editor (ouder → Stickers), cadeautjes kiezen/openmaken, stickerboek met albums van anderen (in de browser doorgelopen met Playwright; Mac-app nog niet)
 - [x] Fase 7 – Back-up (export/import), GitHub Pages en PWA voor offline op de iPad (offline getest in Chromium; iPad zelf nog niet)
+- [x] Fase 8 – Fotobibliotheek: foto's delen vanaf de laptop (beheerconsole, token) en op andere apparaten ophalen met 5-cijferige code of via de bibliotheek, zie `docs/BIBLIOTHEEK.md` (getest in Chromium met nep-GitHub; nog niet tegen de echte GitHub)
 - Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
 
 ## Werkwijze
