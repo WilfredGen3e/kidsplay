@@ -6,6 +6,7 @@ import { canvasToBlob, thumbnail } from '../games/puzzle/image';
 import { DEFAULT_PIECE_OPTIONS } from '../games/puzzle/model';
 import { LIBRARY_REPO, entryPath, rawUrl, type LibraryEntry } from '../games/puzzle/library';
 import { deletePhoto, publishPhoto, updatePhoto } from '../games/puzzle/library-admin';
+import { isAccessCode, isUnlocked, markUnlocked } from './access';
 import { GitHubError, createGitHub } from './github';
 
 const TOKEN_KEY = 'kidsplay-beheer-token';
@@ -249,6 +250,41 @@ function pieceChips(set: Set<number>): HTMLElement {
   return box;
 }
 
-const token = storedToken();
-if (token) showConsole(token);
-else showLogin();
+// --- slot: toegangscode vóór alles
+function showLock() {
+  const screen = el('div', 'parent-screen');
+  const head = el('header', 'parent-header');
+  head.append(el('h1', '', '🔒 Beheerconsole'));
+  const card = el('section', 'card');
+  const input = el('input', 'code-input');
+  input.type = 'password';
+  input.inputMode = 'numeric';
+  input.maxLength = 8;
+  input.placeholder = '••••';
+  input.autocomplete = 'off';
+  const error = el('p', 'error-text');
+  input.addEventListener('input', () => {
+    error.textContent = '';
+    if (isAccessCode(input.value)) {
+      markUnlocked();
+      return void start();
+    }
+    if (input.value.replace(/\D/g, '').length >= 4) {
+      error.textContent = 'Die code klopt niet.';
+      input.value = '';
+    }
+  });
+  card.append(el('p', 'muted', 'Typ de toegangscode.'), input, error);
+  screen.append(head, card);
+  app.replaceChildren(screen);
+  input.focus();
+}
+
+function start() {
+  const token = storedToken();
+  if (token) showConsole(token);
+  else showLogin();
+}
+
+if (isUnlocked()) start();
+else showLock();

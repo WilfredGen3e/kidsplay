@@ -17,6 +17,7 @@ Foto's klaarzetten op de laptop en op andere apparaten (telefoon, iPad, nieuwe M
 - **➕ Nieuwe puzzel** (lokaal uit een foto op dit apparaat) blijft gewoon bestaan.
 
 ## Beheerconsole (`/beheer.html`, niet gelinkt vanuit de app)
+0. Toegangscode (`src/beheer/access.ts`, nu 6402): een slot op het scherm, onthouden zolang het tabblad open is. Het staat in de publieke pagina en is dus geen beveiliging; alleen het token geeft schrijfrechten.
 1. Eenmalig inloggen met het token (instructies staan op de pagina).
 2. Foto kiezen, uitsnijden, naam en aantallen stukjes kiezen, **Delen** → code.
 3. Lijst met alle foto's: wijzigen (naam, aantallen) of verwijderen.
