@@ -41,9 +41,46 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
   input.addEventListener('change', () => {
     if (input.files?.[0]) void useFile(input.files[0]);
   });
-  root.append(drop, message, cropArea);
 
-  async function useFile(file: File) {
+  // Plakken: een contenteditable vak geeft de browser een "Plakken" in het rechtermuismenu;
+  // Ctrl/⌘+V werkt overal op de pagina (behalve in tekstvelden, daar blijft tekst plakken gewoon).
+  const pasteBox = el('div', 'paste-box');
+  pasteBox.contentEditable = 'true';
+  pasteBox.spellcheck = false;
+  pasteBox.setAttribute('role', 'textbox');
+  pasteBox.setAttribute('aria-label', 'Plak hier een gekopieerde foto');
+  const pasteHint = '📋 Foto gekopieerd van een webpagina? Klik hier en kies rechtermuisknop → Plakken (of Ctrl/⌘+V).';
+  pasteBox.dataset.hint = pasteHint;
+  pasteBox.addEventListener('beforeinput', (e) => {
+    if (e.inputType !== 'insertFromPaste') e.preventDefault();
+  });
+  pasteBox.addEventListener('paste', (e) => {
+    e.preventDefault();
+    if (!pasteImage(e)) message.textContent = 'Er zit geen foto op het klembord. Kopieer eerst een foto (rechtermuisknop → Afbeelding kopiëren).';
+  });
+  // Een plak die toch als tekst of HTML binnenkomt mag het vak niet vullen.
+  pasteBox.addEventListener('input', () => pasteBox.replaceChildren());
+
+  const onDocumentPaste = (e: ClipboardEvent) => {
+    if (!root.isConnected) return document.removeEventListener('paste', onDocumentPaste);
+    const target = e.target;
+    const inTextField = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+    if (!inTextField && target !== pasteBox && pasteImage(e)) e.preventDefault();
+  };
+  document.addEventListener('paste', onDocumentPaste);
+
+  /** Pakt de eerste afbeelding van het klembord; geeft false als er geen is. */
+  function pasteImage(e: ClipboardEvent): boolean {
+    const files = [...(e.clipboardData?.files ?? [])];
+    const image = files.find((f) => f.type.startsWith('image/'));
+    if (!image) return false;
+    void useFile(image, '');
+    return true;
+  }
+
+  root.append(drop, pasteBox, message, cropArea);
+
+  async function useFile(file: Blob, fileName = (file as File).name ?? '') {
     message.textContent = '';
     try {
       img = await loadImage(file);
@@ -53,7 +90,7 @@ export function createCropper(onFile?: (fileName: string) => void): Cropper {
       cropArea.replaceChildren();
       return;
     }
-    onFile?.(file.name.replace(/\.[^.]+$/, ''));
+    if (fileName) onFile?.(fileName.replace(/\.[^.]+$/, ''));
     resetView();
     renderCrop();
   }
