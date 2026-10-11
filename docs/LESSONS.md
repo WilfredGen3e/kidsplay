@@ -87,3 +87,9 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Randscrollen vanuit de lade:** de lade ligt naast het speelvlak, dus een stuk dat uit de lade komt, passeert direct de rand. Pas na ongeveer 0,3 s vasthouden scrollen, en alleen als de aanwijzer binnen het speelvlak is.
 - **Dikke rand:** de gestreepte rand van het bord schaalt mee met zoom; compenseer met `border-width: 4 / zoom`.
 - **Testen:** een muiswiel met ctrlKey kan Playwright niet sturen; verstuur een `WheelEvent` met `ctrlKey: true` via `page.evaluate`. Een stuk dat buiten beeld in de lade staat, eerst `scrollIntoViewIfNeeded()`.
+
+## Lade met veel stukjes: verbergen met een klasse, niet met `hidden`
+- **Wat:** `.piece { display: block }` wint van het `hidden`-attribuut (de browserstijl `display: none` is zwakker dan een eigen regel), dus gefilterde stukjes bleven zichtbaar.
+- **Fix:** een eigen klasse `.tray .piece.filtered-out { display: none }`. Verborgen stukjes blijven in de DOM, dus de volgorde en de tussenstand (`trayOrder`) blijven kloppen.
+- **Geheugen meten:** `sum(canvas.width × canvas.height × 4)` over alle `canvas.piece`; 500 stukjes uit 4000 × 3000 zijn ongeveer 120 MB. Dat is groter dan de JS-heap (10 MB) die `performance.memory` laat zien.
+- **Test:** `getByRole('button', { name: /^Alles/ })` past ook op "Alles zien"; wijs de filterknop aan met zijn klasse.

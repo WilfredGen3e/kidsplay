@@ -250,7 +250,13 @@ Per puzzel een vinkje **🧑 Volwassenen** in de puzzel-editor van de ouder.
   - Houd je een stukje bij de rand van het speelvlak ongeveer 0,3 seconde vast, dan schuift het beeld die kant op ("randscrollen").
   - De hulpknop 💡 schuift het beeld naar de plek als die buiten beeld ligt.
   - Maximaal zoomen is 2 schermpixels per afbeeldingspixel (1:1 op een retina-scherm); daarboven zou de foto wazig worden.
-- **Nog te bouwen (fase 9, stap 3 en 4):** een lade die met honderden stukjes werkt (meerdere kolommen, filter "Randstukjes", alleen zichtbare stukjes tekenen), de tussenstand vertraagd bewaren en meten op de iPad.
+- **Lade voor veel stukjes** (alleen bij dit vinkje):
+  - Meerdere kolommen: de knop ▦ wisselt tussen 1, 2, 3 (standaard) en 4 kolommen; de lade wordt daarbij breder of smaller en de keuze wordt onthouden.
+  - Filter **Alles / Rand / Rest** met het aantal stukjes dat nog in de lade ligt. "Rand" toont alleen de randstukjes (een rij van 25 × 20 heeft er 86), zoals je een echte puzzel begint.
+  - De pijlen ⬆️ ⬇️ scrollen een schermpagina.
+  - Het scherm tekent alleen wat in beeld is; de browser slaat de rest vanzelf over.
+- **Geheugen:** 500 stukjes uit een foto van 4000 × 3000 nemen ongeveer 120 MB aan canvasgeheugen in. Op een oudere iPad kan dat te veel zijn; meten op de iPad staat bij stap 4 hieronder.
+- **Nog te bouwen (fase 9, stap 4):** de tussenstand vertraagd bewaren en meten op de iPad.
 
 ### Sessieregel: geen punten sprokkelen met kleine puzzels
 

@@ -1715,3 +1715,45 @@ img.book-avatar {
 .zoom-label {
   pointer-events: none;
 }
+
+/* Lade voor grote puzzels: kolommen en filter */
+.tray.multi {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 4px 24px;
+}
+.tray .piece.filtered-out {
+  display: none;
+}
+.tray-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.tray-cols {
+  font-size: 22px;
+  font-weight: 700;
+}
+.tray-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.tray-filter-button {
+  min-height: 36px;
+  padding: 4px 10px;
+  border-radius: 18px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 0 rgb(0 0 0 / 20%);
+}
+.tray-filter-button.active {
+  background: #4c6ef5;
+  color: #fff;
+}

@@ -18,6 +18,10 @@ import { applyDrop, snapDistance, type SnapPiece } from './snap';
 
 const TRAY_WIDTH = 168;
 const TRAY_ITEM = 120;
+/** Grote puzzels: kolommen in de lade en de bijbehorende stukgrootte. */
+const TRAY_COLUMN_ITEM: Record<number, number> = { 1: 120, 2: 100, 3: 88, 4: 76 };
+const TRAY_COLUMNS_KEY = 'kidsplay-lade-kolommen';
+type TrayFilter = 'all' | 'edge' | 'rest';
 const LIFT_SCALE = 1.05;
 const DRAG_THRESHOLD = 5;
 const SNAP_ANIMATION_MS = 120;
@@ -57,6 +61,15 @@ export interface PuzzleOptions {
   zoomable?: boolean;
 }
 
+function storedTrayColumns(): number {
+  try {
+    const n = Number(localStorage.getItem(TRAY_COLUMNS_KEY));
+    return n in TRAY_COLUMN_ITEM ? n : 3;
+  } catch {
+    return 3;
+  }
+}
+
 function scaledCopy(source: HTMLCanvasElement, maxWidth: number): HTMLCanvasElement {
   const k = Math.min(1, maxWidth / source.width);
   const copy = document.createElement('canvas');
@@ -90,8 +103,12 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   trayPanel.style.width = `${TRAY_WIDTH}px`;
   const trayHead = el('div', 'tray-head');
   const tray = el('div', 'tray');
+  // Lade: bij grote puzzels meerdere kolommen en een filter; anders één kolom van 120 px.
+  let trayCols = opts.zoomable ? storedTrayColumns() : 1;
+  let trayItem = opts.zoomable ? TRAY_COLUMN_ITEM[trayCols] : TRAY_ITEM;
+  let trayFilter: TrayFilter = 'all';
   // Scrollen met een trackpad is lastig voor jonge kinderen: pijlen boven en onder de lade.
-  const scrollStep = () => (TRAY_ITEM + 16) * 2;
+  const scrollStep = () => (opts.zoomable ? Math.max(160, tray.clientHeight * 0.8) : (TRAY_ITEM + 16) * 2);
   const upButton = iconButton('⬆️', 'Omhoog', 'tool-button tray-arrow', () =>
     tray.scrollBy({ top: -scrollStep(), behavior: 'smooth' }),
   );
@@ -126,6 +143,67 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     tools.append(iconButton('💡', 'Hulp', 'tool-button', () => showHint()));
   }
   if (tools.children.length > 0) trayHead.append(tools);
+
+  const filterButtons: Partial<Record<TrayFilter, HTMLButtonElement>> = {};
+  const isEdgePiece = (p: PieceState) => Object.values(p.info.isEdge).some(Boolean);
+  const matchesFilter = (p: PieceState) =>
+    trayFilter === 'all' || (trayFilter === 'edge' ? isEdgePiece(p) : !isEdgePiece(p));
+  function updateTrayStats() {
+    if (!opts.zoomable) return;
+    const inTray = pieces.filter((p) => p.where === 'tray');
+    const edge = inTray.filter(isEdgePiece).length;
+    const counts: Record<TrayFilter, number> = { all: inTray.length, edge, rest: inTray.length - edge };
+    const names: Record<TrayFilter, string> = { all: 'Alles', edge: 'Rand', rest: 'Rest' };
+    for (const key of Object.keys(names) as TrayFilter[]) {
+      filterButtons[key]!.textContent = `${names[key]} ${counts[key]}`;
+    }
+  }
+  function applyFilter() {
+    for (const p of pieces) {
+      if (p.where === 'tray') p.el.classList.toggle('filtered-out', !matchesFilter(p));
+    }
+    for (const [key, button] of Object.entries(filterButtons)) button!.classList.toggle('active', key === trayFilter);
+    tray.scrollTop = 0;
+  }
+  /** Zet het aantal kolommen: breedte van de lade, stukgrootte en indeling van het speelvlak. */
+  function applyTrayLayout() {
+    if (!opts.zoomable) return;
+    trayItem = TRAY_COLUMN_ITEM[trayCols];
+    const gap = 8;
+    trayPanel.style.width = `${trayCols * trayItem + (trayCols - 1) * gap + 16 + 14}px`;
+    tray.classList.toggle('multi', trayCols > 1);
+    colsButton.textContent = `▦ ${trayCols}`;
+    for (const p of pieces) if (p.where === 'tray') setTraySize(p);
+    layout();
+  }
+  const colsButton = el('button', 'tool-button tray-cols');
+  if (opts.zoomable) {
+    colsButton.type = 'button';
+    colsButton.setAttribute('aria-label', 'Kolommen in de lade');
+    colsButton.addEventListener('click', () => {
+      trayCols = (trayCols % 4) + 1;
+      try {
+        localStorage.setItem(TRAY_COLUMNS_KEY, String(trayCols));
+      } catch {
+        // Zonder opslag blijft de keuze alleen voor deze puzzel.
+      }
+      applyTrayLayout();
+    });
+    const filter = el('div', 'tray-filter');
+    for (const key of ['all', 'edge', 'rest'] as TrayFilter[]) {
+      const b = el('button', 'tray-filter-button');
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        trayFilter = key;
+        applyFilter();
+      });
+      filterButtons[key] = b;
+      filter.append(b);
+    }
+    const controls = el('div', 'tray-controls');
+    controls.append(colsButton, filter);
+    trayHead.append(controls);
+  }
   if (previewCard) trayHead.append(previewCard);
   root.replaceChildren(wrap);
 
@@ -165,7 +243,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   function setTraySize(p: PieceState) {
     const w = p.info.rect.width + 2 * margin;
     const h = p.info.rect.height + 2 * margin;
-    const k = TRAY_ITEM / Math.max(w, h);
+    const k = trayItem / Math.max(w, h);
     p.el.style.width = `${w * k}px`;
     p.el.style.height = `${h * k}px`;
     p.el.style.transform = '';
@@ -243,6 +321,8 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     p.el.classList.remove('loose', 'dragging');
     setTraySize(p);
     tray.append(p.el);
+    p.el.classList.toggle('filtered-out', !matchesFilter(p));
+    updateTrayStats();
     opts.onProgress?.(snapshot());
   }
 
@@ -253,8 +333,10 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       m.el.classList.add('dragging');
       m.el.style.zIndex = String(++z);
       setBoardSize(m);
+      m.el.classList.remove('filtered-out');
       world.append(m.el);
     }
+    updateTrayStats();
   }
 
   /** Legt de groep neer: houdt hem in beeld en laat hem eventueel vastklikken. */
@@ -575,6 +657,11 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   }
   for (const p of pieces) attachDrag(p);
 
+  if (opts.zoomable) {
+    applyFilter();
+    updateTrayStats();
+    applyTrayLayout();
+  }
   layout();
   window.addEventListener('resize', layout);
   return () => {
