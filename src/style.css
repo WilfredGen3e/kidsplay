@@ -1689,3 +1689,29 @@ img.book-avatar {
   pointer-events: none;
   box-shadow: none;
 }
+
+/* Zoomen en verschuiven in grote puzzels */
+.world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+.stage.zoomable {
+  touch-action: none;
+}
+.zoom-controls {
+  position: absolute;
+  z-index: 1000000;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.zoom-fit {
+  font-size: 16px;
+  font-weight: 700;
+}
+.zoom-label {
+  pointer-events: none;
+}

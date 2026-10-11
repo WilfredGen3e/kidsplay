@@ -243,7 +243,14 @@ Per puzzel een vinkje **🧑 Volwassenen** in de puzzel-editor van de ouder.
 - **Resolutie:** de foto wordt bewaard met maximaal 4096 px op de langste zijde en 12 miljoen pixels, zodat inzoomen scherp blijft (gewone puzzels: 2048 px breed).
 - **Geen spaarpunten** en **niet onder de sessieregel**: 500 stukjes zouden anders tien stickers in één keer geven.
 - **Wie ze ziet** regel je met "Zichtbaar voor".
-- **Nog te bouwen (fase 9):** zoomen en verschuiven in het speelvlak (knijpen, scrollwiel, ➕ ➖ en "Alles zien", randscrollen tijdens slepen), een lade die met honderden stukjes werkt (meerdere kolommen, filter "Randstukjes", alleen zichtbare stukjes tekenen) en de tussenstand vertraagd bewaren.
+- **Zoomen en verschuiven** (alleen bij dit vinkje), linksonder in het speelvlak:
+  - ➕ en ➖ zoomen, het midden toont het percentage en tikken zet alles terug op "Alles zien".
+  - Knijpen met twee vingers (iPad) of ctrl + wiel / knijpen op een trackpad (Mac) zoomt rond de aanwijzer; het wiel van een muis zoomt ook.
+  - De achtergrond slepen, of met twee vingers vegen, verschuift het beeld; het bord blijft altijd (deels) in beeld.
+  - Houd je een stukje bij de rand van het speelvlak ongeveer 0,3 seconde vast, dan schuift het beeld die kant op ("randscrollen").
+  - De hulpknop 💡 schuift het beeld naar de plek als die buiten beeld ligt.
+  - Maximaal zoomen is 2 schermpixels per afbeeldingspixel (1:1 op een retina-scherm); daarboven zou de foto wazig worden.
+- **Nog te bouwen (fase 9, stap 3 en 4):** een lade die met honderden stukjes werkt (meerdere kolommen, filter "Randstukjes", alleen zichtbare stukjes tekenen), de tussenstand vertraagd bewaren en meten op de iPad.
 
 ### Sessieregel: geen punten sprokkelen met kleine puzzels
 

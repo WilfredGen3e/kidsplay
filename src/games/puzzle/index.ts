@@ -156,6 +156,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       preview: settings.preview,
       ghost: settings.ghost,
       hint: settings.hint,
+      zoomable: puzzle.adult === true,
       restore: fresh ? undefined : findSnapshot(progress, puzzle.id, pieces),
       // Volwassenenpuzzels geven geen spaarpunten.
       onLock: puzzle.adult ? undefined : (count) => void ctx.addPoints(count).catch(() => {}),

@@ -79,3 +79,11 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## Puzzel gemaakt vóór het eerste profiel was onzichtbaar
 - **Wat:** `visibleFor` werd `[]` ("niemand") als er nog geen profielen bestonden, terwijl het model "iedereen, ook latere profielen" belooft. Een puzzel die je maakte vóór je een kind aanmaakte, bleef daarna onzichtbaar.
 - **Fix:** `ctx.profiles.every(...)` is bij een lege lijst waar, dus `'all'` (`manage.ts`). Gevonden doordat een browsertest de puzzel vóór het profiel aanmaakte.
+
+## Zoomen: één `world`-laag, en rekenen in twee stelsels
+- **Aanpak:** bord, stukjes en hulpflits staan in `div.world`; zoomen en verschuiven is één `transform` daarop (geen 500 stijlwijzigingen per wielklik). Elementen worden gepositioneerd met de **basisindeling** (`baseScale`, `baseLeft`, `baseTop`); de aanwijzer wordt omgerekend met de **effectieve** waarden (`scale = baseScale × zoom`, `boardLeft = pan + baseLeft × zoom`).
+- **Valkuil:** pointer-wiskunde met `baseScale` of positionering met `scale` klopt alleen bij zoom 1. Gebruik overal de juiste van de twee.
+- **Slepen terwijl het beeld schuift** (randscrollen): een stuk op het canvas rekent zijn verplaatsing als `(aanwijzer − start − (pan − pan bij oppakken)) / scale`, anders glijdt het onder de aanwijzer weg.
+- **Randscrollen vanuit de lade:** de lade ligt naast het speelvlak, dus een stuk dat uit de lade komt, passeert direct de rand. Pas na ongeveer 0,3 s vasthouden scrollen, en alleen als de aanwijzer binnen het speelvlak is.
+- **Dikke rand:** de gestreepte rand van het bord schaalt mee met zoom; compenseer met `border-width: 4 / zoom`.
+- **Testen:** een muiswiel met ctrlKey kan Playwright niet sturen; verstuur een `WheelEvent` met `ctrlKey: true` via `page.evaluate`. Een stuk dat buiten beeld in de lade staat, eerst `scrollIntoViewIfNeeded()`.

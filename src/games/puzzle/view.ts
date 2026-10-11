@@ -1,6 +1,17 @@
 import { el, iconButton } from '../../ui/dom';
 import { buildPieces, computeGrid } from './grid';
 import { clampToStage, fitScale } from './layout';
+import {
+  IDENTITY,
+  centerOn,
+  clampViewport,
+  isVisible,
+  maxZoomFor,
+  panBy,
+  zoomAt,
+  type ViewBox,
+  type Viewport,
+} from './viewport';
 import type { PuzzleSnapshot } from './progress';
 import { generateEdges, shapeMetrics, sliceJigsaw } from './shapes';
 import { applyDrop, snapDistance, type SnapPiece } from './snap';
@@ -10,6 +21,11 @@ const TRAY_ITEM = 120;
 const LIFT_SCALE = 1.05;
 const DRAG_THRESHOLD = 5;
 const SNAP_ANIMATION_MS = 120;
+const ZOOM_STEP = 1.5;
+/** Aan de rand van het speelvlak schuift het beeld mee tijdens het slepen. */
+const EDGE_ZONE = 56;
+const EDGE_SPEED = 14;
+const EDGE_DWELL_MS = 300;
 
 interface PieceState extends SnapPiece {
   el: HTMLCanvasElement;
@@ -37,6 +53,8 @@ export interface PuzzleOptions {
   ghost?: boolean;
   /** Hulpknop die laat oplichten waar een stukje hoort. */
   hint?: boolean;
+  /** Zoomen en verschuiven (grote puzzels voor volwassenen). */
+  zoomable?: boolean;
 }
 
 function scaledCopy(source: HTMLCanvasElement, maxWidth: number): HTMLCanvasElement {
@@ -81,9 +99,12 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     tray.scrollBy({ top: scrollStep(), behavior: 'smooth' }),
   );
   trayPanel.append(trayHead, upButton, tray, downButton);
-  const stage = el('div', 'stage');
+  const stage = el('div', `stage${opts.zoomable ? ' zoomable' : ''}`);
+  // Bord, stukjes en hulpflits staan in één laag die voor zoomen en verschuiven met één transform meebeweegt.
+  const world = el('div', 'world');
   const board = el('div', 'board');
-  stage.append(board);
+  world.append(board);
+  stage.append(world);
   wrap.append(trayPanel, stage);
 
   if (opts.ghost) {
@@ -94,6 +115,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
 
   // Voorbeeld en hulpknop staan boven de lade, zodat ze nooit over het canvas of de stukjes liggen.
   const tools = el('div', 'tray-tools');
+  const zoomLabel = el('span', 'zoom-label', '🔍');
   let previewCard: HTMLElement | undefined;
   if (opts.preview) {
     previewCard = el('div', 'preview-card');
@@ -117,10 +139,19 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     return { info, el: canvas, where: 'tray', x: 0, y: 0, locked: false, group: info.id };
   });
 
-  // Positie en schaal van het canvas in het speelvlak; stukken staan in afbeeldingspixels.
+  // Basisindeling: het canvas past in het speelvlak (zonder zoom). Stukken staan in afbeeldingspixels.
+  let baseScale = 1;
+  let baseLeft = 0;
+  let baseTop = 0;
+  // Weergave daarbovenop: zoom en verschuiving (alleen bij `zoomable`).
+  let view: Viewport = IDENTITY;
+  // Wat het scherm werkelijk laat zien, in speelvlak-pixels; hiermee rekenen we aanwijzer om naar afbeelding.
   let scale = 1;
   let boardLeft = 0;
   let boardTop = 0;
+  let panMoved = false;
+  /** Er wordt een stuk gesleept: dan niet zoomen of verschuiven met de achtergrond. */
+  let dragging = false;
   let z = 1;
   let startedAt: number | undefined;
   let completed = false;
@@ -141,32 +172,59 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   }
 
   function setBoardSize(p: PieceState) {
-    p.el.style.width = `${(p.info.rect.width + 2 * margin) * scale}px`;
-    p.el.style.height = `${(p.info.rect.height + 2 * margin) * scale}px`;
+    p.el.style.width = `${(p.info.rect.width + 2 * margin) * baseScale}px`;
+    p.el.style.height = `${(p.info.rect.height + 2 * margin) * baseScale}px`;
   }
 
   function render(p: PieceState) {
     if (p.where !== 'stage') return;
     const lift = p.el.classList.contains('dragging') && groupOf(p).length === 1;
-    p.el.style.transform = `translate(${boardLeft + (p.x - margin) * scale}px, ${boardTop + (p.y - margin) * scale}px)${lift ? ` scale(${LIFT_SCALE})` : ''}`;
+    p.el.style.transform = `translate(${baseLeft + (p.x - margin) * baseScale}px, ${baseTop + (p.y - margin) * baseScale}px)${lift ? ` scale(${LIFT_SCALE})` : ''}`;
+  }
+
+  const boxOf = (): ViewBox => {
+    const rect = stage.getBoundingClientRect();
+    return {
+      stageW: rect.width,
+      stageH: rect.height,
+      left: baseLeft,
+      top: baseTop,
+      width: image.width * baseScale,
+      height: image.height * baseScale,
+    };
+  };
+  const maxZoom = () => (opts.zoomable ? maxZoomFor(baseScale) : 1);
+
+  /** Past de zoomlaag toe en rekent de effectieve schaal en positie opnieuw uit. */
+  function applyView(next: Viewport = view) {
+    view = clampViewport(next, boxOf(), maxZoom());
+    world.style.transform = view.zoom === 1 ? '' : `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`;
+    scale = baseScale * view.zoom;
+    // De gestreepte rand blijft even dik, ook als de wereld vergroot wordt.
+    board.style.borderWidth = `${4 / view.zoom}px`;
+    board.style.margin = `${-4 / view.zoom}px`;
+    boardLeft = view.panX + baseLeft * view.zoom;
+    boardTop = view.panY + baseTop * view.zoom;
+    zoomLabel.textContent = view.zoom === 1 ? '🔍' : `${Math.round(view.zoom * 100)}%`;
   }
 
   function layout() {
     const rect = stage.getBoundingClientRect();
-    scale = fitScale(rect.width, rect.height, image.width, image.height);
-    const w = image.width * scale;
-    const h = image.height * scale;
-    boardLeft = (rect.width - w) / 2;
-    boardTop = (rect.height - h) / 2;
+    baseScale = fitScale(rect.width, rect.height, image.width, image.height);
+    const w = image.width * baseScale;
+    const h = image.height * baseScale;
+    baseLeft = (rect.width - w) / 2;
+    baseTop = (rect.height - h) / 2;
     board.style.width = `${w}px`;
     board.style.height = `${h}px`;
-    board.style.left = `${boardLeft}px`;
-    board.style.top = `${boardTop}px`;
+    board.style.left = `${baseLeft}px`;
+    board.style.top = `${baseTop}px`;
     for (const p of pieces) {
       if (p.where !== 'stage') continue;
       setBoardSize(p);
       render(p);
     }
+    applyView();
   }
 
   function snapshot(): PuzzleSnapshot {
@@ -195,7 +253,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       m.el.classList.add('dragging');
       m.el.style.zIndex = String(++z);
       setBoardSize(m);
-      stage.append(m.el);
+      world.append(m.el);
     }
   }
 
@@ -252,11 +310,17 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       pieces.find((p) => !p.locked);
     if (!target) return;
     const flash = el('div', 'hint-flash');
-    flash.style.left = `${boardLeft + target.info.rect.x * scale}px`;
-    flash.style.top = `${boardTop + target.info.rect.y * scale}px`;
-    flash.style.width = `${target.info.rect.width * scale}px`;
-    flash.style.height = `${target.info.rect.height * scale}px`;
-    stage.append(flash);
+    flash.style.left = `${baseLeft + target.info.rect.x * baseScale}px`;
+    flash.style.top = `${baseTop + target.info.rect.y * baseScale}px`;
+    flash.style.width = `${target.info.rect.width * baseScale}px`;
+    flash.style.height = `${target.info.rect.height * baseScale}px`;
+    world.append(flash);
+    // Staat de plek buiten beeld, dan schuift het beeld erheen.
+    if (opts.zoomable) {
+      const wx = baseLeft + (target.info.rect.x + target.info.rect.width / 2) * baseScale;
+      const wy = baseTop + (target.info.rect.y + target.info.rect.height / 2) * baseScale;
+      if (!isVisible(view, wx, wy, boxOf())) applyView(centerOn(view, wx, wy, boxOf(), maxZoom()));
+    }
     setTimeout(() => flash.remove(), 1800);
   }
 
@@ -279,24 +343,22 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
       let members: PieceState[] = [];
       let origin: { x: number; y: number }[] = [];
       let lifted = false;
+      let panAtLift = { x: 0, y: 0 };
+      let pointer = { x: down.clientX, y: down.clientY };
+      let edgeFrame = 0;
+      let edgeSince: number | undefined;
       lastTouched = p;
 
-      const move = (e: PointerEvent) => {
-        if (!lifted) {
-          if (Math.hypot(e.clientX - down.clientX, e.clientY - down.clientY) < DRAG_THRESHOLD) return;
-          lifted = true;
-          select(undefined);
-          members = groupOf(p);
-          origin = members.map((m) => ({ x: m.x, y: m.y }));
-          lift(members);
-        }
+      /** Zet de groep onder de aanwijzer; rekent met de huidige zoom en verschuiving. */
+      const place = () => {
         if (fromTray) {
           const s = stage.getBoundingClientRect();
-          p.x = (e.clientX - s.left - boardLeft) / scale - fx * (p.info.rect.width + 2 * margin) + margin;
-          p.y = (e.clientY - s.top - boardTop) / scale - fy * (p.info.rect.height + 2 * margin) + margin;
+          p.x = (pointer.x - s.left - boardLeft) / scale - fx * (p.info.rect.width + 2 * margin) + margin;
+          p.y = (pointer.y - s.top - boardTop) / scale - fy * (p.info.rect.height + 2 * margin) + margin;
         } else {
-          const dx = (e.clientX - down.clientX) / scale;
-          const dy = (e.clientY - down.clientY) / scale;
+          // Schuift het beeld tijdens het slepen, dan blijft het stuk onder de aanwijzer.
+          const dx = (pointer.x - down.clientX - (view.panX - panAtLift.x)) / scale;
+          const dy = (pointer.y - down.clientY - (view.panY - panAtLift.y)) / scale;
           members.forEach((m, i) => {
             m.x = origin[i].x + dx;
             m.y = origin[i].y + dy;
@@ -305,10 +367,54 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
         members.forEach(render);
       };
 
+      /** Houdt de aanwijzer lang genoeg aan de rand van het speelvlak, dan schuift het beeld die kant op. */
+      const edgeScroll = (now: number) => {
+        edgeFrame = 0;
+        if (!lifted) return;
+        const s = stage.getBoundingClientRect();
+        const inside = pointer.x >= s.left && pointer.x <= s.right && pointer.y >= s.top && pointer.y <= s.bottom;
+        let vx = 0;
+        let vy = 0;
+        if (inside) {
+          if (pointer.x < s.left + EDGE_ZONE) vx = EDGE_SPEED;
+          else if (pointer.x > s.right - EDGE_ZONE) vx = -EDGE_SPEED;
+          if (pointer.y < s.top + EDGE_ZONE) vy = EDGE_SPEED;
+          else if (pointer.y > s.bottom - EDGE_ZONE) vy = -EDGE_SPEED;
+        }
+        if (vx === 0 && vy === 0) {
+          edgeSince = undefined;
+        } else {
+          edgeSince ??= now;
+          if (now - edgeSince >= EDGE_DWELL_MS) {
+            applyView(panBy(view, vx, vy, boxOf(), maxZoom()));
+            place();
+          }
+        }
+        edgeFrame = requestAnimationFrame(edgeScroll);
+      };
+
+      const move = (e: PointerEvent) => {
+        pointer = { x: e.clientX, y: e.clientY };
+        if (!lifted) {
+          if (Math.hypot(e.clientX - down.clientX, e.clientY - down.clientY) < DRAG_THRESHOLD) return;
+          lifted = true;
+          dragging = true;
+          select(undefined);
+          members = groupOf(p);
+          origin = members.map((m) => ({ x: m.x, y: m.y }));
+          panAtLift = { x: view.panX, y: view.panY };
+          lift(members);
+          if (opts.zoomable) edgeFrame = requestAnimationFrame(edgeScroll);
+        }
+        place();
+      };
+
       const up = (e: PointerEvent) => {
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', up);
         window.removeEventListener('pointercancel', up);
+        cancelAnimationFrame(edgeFrame);
+        dragging = false;
         if (!lifted) {
           if (p.where === 'tray') select(selected === p ? undefined : p);
           return;
@@ -329,7 +435,8 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
 
   // Klikken in plaats van slepen: kies een stuk in de lade en klik daarna op het canvas.
   stage.addEventListener('click', (e) => {
-    if (!selected || (e.target !== stage && e.target !== board)) return;
+    if (panMoved) return void (panMoved = false);
+    if (!selected || (e.target !== stage && e.target !== world && e.target !== board)) return;
     const p = selected;
     select(undefined);
     const s = stage.getBoundingClientRect();
@@ -338,6 +445,119 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     lift([p]);
     settle(p);
   });
+
+  // --- Zoomen en verschuiven (alleen grote puzzels voor volwassenen) ---
+  const pointers = new Map<number, { x: number; y: number }>();
+  let gesture:
+    | { kind: 'pan'; x: number; y: number; start: Viewport }
+    | { kind: 'pinch'; distance: number; cx: number; cy: number; start: Viewport }
+    | undefined;
+  let disposeZoom = () => {};
+
+  if (opts.zoomable) {
+    const stageCenter = () => {
+      const r = stage.getBoundingClientRect();
+      return { x: r.width / 2, y: r.height / 2 };
+    };
+    const zoomBy = (factor: number, at = stageCenter()) =>
+      applyView(zoomAt(view, at.x, at.y, view.zoom * factor, boxOf(), maxZoom()));
+
+    // Knoppen: dubbele functie van de middelste knop is "alles zien".
+    const controls = el('div', 'zoom-controls');
+    const fit = el('button', 'tool-button zoom-fit');
+    fit.type = 'button';
+    fit.setAttribute('aria-label', 'Alles zien');
+    fit.append(zoomLabel);
+    fit.addEventListener('click', () => applyView(IDENTITY));
+    controls.append(
+      iconButton('➕', 'Inzoomen', 'tool-button', () => zoomBy(ZOOM_STEP)),
+      fit,
+      iconButton('➖', 'Uitzoomen', 'tool-button', () => zoomBy(1 / ZOOM_STEP)),
+    );
+    stage.append(controls);
+
+    const localPoint = (e: { clientX: number; clientY: number }) => {
+      const r = stage.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
+    const startGesture = () => {
+      const points = [...pointers.values()];
+      if (points.length === 1) {
+        gesture = { kind: 'pan', x: points[0].x, y: points[0].y, start: view };
+      } else if (points.length >= 2) {
+        const [a, b] = points;
+        const mid = localPoint({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+        gesture = { kind: 'pinch', distance: Math.hypot(a.x - b.x, a.y - b.y) || 1, cx: mid.x, cy: mid.y, start: view };
+      } else {
+        gesture = undefined;
+      }
+    };
+
+    // Achtergrond slepen verschuift, twee vingers knijpen zoomt. Een stuk dat al gepakt is (defaultPrevented) niet.
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.defaultPrevented || dragging || (e.target as HTMLElement).closest('.zoom-controls')) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      stage.setPointerCapture(e.pointerId);
+      startGesture();
+    });
+    stage.addEventListener('pointermove', (e) => {
+      if (!pointers.has(e.pointerId) || !gesture || dragging) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (gesture.kind === 'pan') {
+        const dx = e.clientX - gesture.x;
+        const dy = e.clientY - gesture.y;
+        if (Math.hypot(dx, dy) > DRAG_THRESHOLD) panMoved = true;
+        if (panMoved) applyView(panBy(gesture.start, dx, dy, boxOf(), maxZoom()));
+      } else {
+        const [a, b] = [...pointers.values()];
+        if (!a || !b) return;
+        const distance = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        const mid = localPoint({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+        const zoomed = zoomAt(gesture.start, gesture.cx, gesture.cy, gesture.start.zoom * (distance / gesture.distance), boxOf(), maxZoom());
+        applyView(panBy(zoomed, mid.x - gesture.cx, mid.y - gesture.cy, boxOf(), maxZoom()));
+        panMoved = true;
+      }
+    });
+    const endPointer = (e: PointerEvent) => {
+      if (!pointers.delete(e.pointerId)) return;
+      startGesture();
+      // Na loslaten duurt 'click' nog even; panMoved wordt daar (of hier, bij geen click) weer gewist.
+      if (pointers.size === 0 && panMoved) setTimeout(() => (panMoved = false), 0);
+    };
+    stage.addEventListener('pointerup', endPointer);
+    stage.addEventListener('pointercancel', endPointer);
+
+    // Scrollwiel van een muis zoomt; knijpen op een trackpad (ctrl+wiel) zoomt vloeiend; twee vingers vegen verschuift.
+    stage.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
+        if (dragging) return;
+        const at = localPoint(e);
+        const pinch = e.ctrlKey || e.metaKey;
+        const mouseWheel = e.deltaMode !== 0 || (Math.abs(e.deltaY) >= 50 && e.deltaX === 0);
+        if (pinch || mouseWheel) {
+          zoomBy(Math.exp((-e.deltaY * (pinch ? 0.01 : 0.0035)) * (e.deltaMode === 1 ? 16 : 1)), at);
+        } else {
+          applyView(panBy(view, -e.deltaX, -e.deltaY, boxOf(), maxZoom()));
+        }
+      },
+      { passive: false },
+    );
+    // Safari en WebKit (iPad, Mac-app) sturen gesture-events voor knijpen; houd de pagina zelf stil.
+    let gestureStart = 1;
+    stage.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+      gestureStart = view.zoom;
+    });
+    stage.addEventListener('gesturechange', (e) => {
+      e.preventDefault();
+      if (pointers.size >= 2 || dragging) return;
+      const scaleFactor = (e as unknown as { scale?: number }).scale || 1;
+      applyView(zoomAt(view, stageCenter().x, stageCenter().y, gestureStart * scaleFactor, boxOf(), maxZoom()));
+    });
+    disposeZoom = () => pointers.clear();
+  }
 
   const restore = opts.restore;
   const trayOrder = restore ? restore.trayOrder.map((id) => pieces[id]) : shuffled(pieces);
@@ -351,7 +571,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
     Object.assign(p, { where: 'stage', x: saved.x, y: saved.y, locked: saved.locked, group: saved.group });
     p.el.classList.add(saved.locked ? 'locked' : 'loose');
     p.el.style.zIndex = saved.locked ? '0' : String(++z);
-    stage.append(p.el);
+    world.append(p.el);
   }
   for (const p of pieces) attachDrag(p);
 
@@ -359,6 +579,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   window.addEventListener('resize', layout);
   return () => {
     window.removeEventListener('resize', layout);
+    disposeZoom();
     root.replaceChildren();
   };
 }
