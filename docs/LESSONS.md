@@ -105,3 +105,7 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Wat:** het schaakbord (`.sk-board`) had alleen `grid-template-columns: repeat(8, 1fr)`. Rijen met stukken werden hoger dan lege rijen, vakjes werden rechthoekig en de bolletjes ovaal.
 - **Fix:** ook `grid-template-rows: repeat(8, minmax(0, 1fr))` en kolommen met `minmax(0, 1fr)`. Voor een vast raster altijd rijen én kolommen vastzetten.
 - **Gevonden met:** een screenshot in een echte browser; de tests zagen niets.
+
+## CSS: media query vóór de gewone regel wordt overschreven
+- **Wat:** `@media (orientation: portrait) { .sk-side { flex-direction: row } }` stond boven de gewone `.sk-side`-regel (die later in het bestand kwam) en deed daarom niets. Bij gelijke specificiteit wint de laatste regel.
+- **Fix:** zet media queries ná de basisregels die ze aanpassen (of verhoog de specificiteit). Ook gezien: de huisknop van het platform ligt linksboven over een schermvullend spel; geef zo'n spel `padding-left`/`padding-top` van ongeveer 96px.

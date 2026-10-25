@@ -1,7 +1,7 @@
-import { el } from '../../ui/dom';
+import { el, iconButton } from '../../ui/dom';
+import { renderBoard } from './board';
 import { pieceName, pieceSvg } from './pieces';
 import {
-  SIZE,
   emptyBoard,
   movePiece,
   movesFor,
@@ -31,7 +31,7 @@ const SOLO_START: Record<Kind, Square> = {
  * Oefenbord: kies een stuk, tik erop en zie waar het naartoe mag, tik op een bolletje om te lopen.
  * Het kind kan niets fout doen; er zijn geen beurten en geen regels die blokkeren.
  */
-export function mountBoard(root: HTMLElement): () => void {
+export function mountBoard(root: HTMLElement, onBack: () => void): () => void {
   let board: Board = emptyBoard();
   let selected: Square | undefined;
   let moved: Square | undefined;
@@ -70,32 +70,7 @@ export function mountBoard(root: HTMLElement): () => void {
   };
 
   const render = () => {
-    const targets = selected ? movesFor(board, selected) : [];
-    const cells: HTMLElement[] = [];
-    for (let row = SIZE - 1; row >= 0; row--) {
-      for (let col = 0; col < SIZE; col++) {
-        const sq = { col, row };
-        const piece = pieceAt(board, sq);
-        const isTarget = targets.some((t) => sameSquare(t, sq));
-        const cell = el('button', 'sk-sq');
-        cell.type = 'button';
-        cell.classList.add((col + row) % 2 === 0 ? 'sk-dark' : 'sk-light');
-        if (selected && sameSquare(selected, sq)) cell.classList.add('sk-selected');
-        if (isTarget) cell.classList.add(piece ? 'sk-capture' : 'sk-target');
-        cell.dataset.col = String(col);
-        cell.dataset.row = String(row);
-        if (piece) {
-          cell.setAttribute('aria-label', pieceName(piece.kind));
-          const holder = el('span', 'sk-piece');
-          if (moved && sameSquare(moved, sq)) holder.classList.add('sk-landed');
-          holder.innerHTML = pieceSvg(piece);
-          cell.append(holder);
-        }
-        cell.addEventListener('click', () => tap(sq));
-        cells.push(cell);
-      }
-    }
-    boardEl.replaceChildren(...cells);
+    renderBoard(boardEl, { board, selected, moved, targets: selected ? movesFor(board, selected) : [] }, tap);
 
     picker.replaceChildren(
       ...PICKER.map((kind) => {
@@ -115,6 +90,7 @@ export function mountBoard(root: HTMLElement): () => void {
         button.addEventListener('click', () => setup('all'));
         return button;
       })(),
+      iconButton('⬅️', 'Terug', 'round-button sk-back', onBack),
     );
   };
 
