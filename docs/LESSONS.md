@@ -100,3 +100,8 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Weggooien (`cancel`):** bij voltooien. Anders schrijft de timer nog een oude tussenstand ná het resultaat, en komt de voltooide puzzel terug als "bezig" (▶️).
 - **Test met een teller:** wikkel `IDBObjectStore.prototype.put` in een `addInitScript` en tel waarden met `"inProgress"`; controleer ook de positieve kant (na een stilte precies één schrijfactie), anders bewijst een nul niets.
 - **Stop-melding op iOS:** een geheugenkill geeft geen `pagehide`. Daarom staat een "bezig"-merk in `localStorage` dat bij naar de achtergrond gaan wordt gewist; staat het er bij het volgende opstarten nog, dan is de app in de voorgrond gestopt. Het blijft een indicatie, geen bewijs.
+
+## CSS-grid: rijen met en zonder inhoud werden ongelijk hoog
+- **Wat:** het schaakbord (`.sk-board`) had alleen `grid-template-columns: repeat(8, 1fr)`. Rijen met stukken werden hoger dan lege rijen, vakjes werden rechthoekig en de bolletjes ovaal.
+- **Fix:** ook `grid-template-rows: repeat(8, minmax(0, 1fr))` en kolommen met `minmax(0, 1fr)`. Voor een vast raster altijd rijen én kolommen vastzetten.
+- **Gevonden met:** een screenshot in een echte browser; de tests zagen niets.

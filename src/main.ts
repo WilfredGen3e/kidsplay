@@ -1,6 +1,7 @@
 import './style.css';
 import { startApp } from './app';
 import { puzzleGame } from './games/puzzle';
+import { schakenGame } from './games/schaken';
 import { getGames, registerGame } from './platform/registry';
 import { createGameData } from './platform/context';
 import { createBackup, parseBackup, restoreBackup } from './platform/backup';
@@ -8,6 +9,7 @@ import { IndexedDbStorage } from './platform/storage/indexeddb';
 import { canSelfUpdate, createUpdateActions } from './platform/update';
 
 registerGame(puzzleGame);
+registerGame(schakenGame);
 
 const storage = await IndexedDbStorage.open();
 for (const game of getGames()) await game.init?.(createGameData(storage.records, game.id));

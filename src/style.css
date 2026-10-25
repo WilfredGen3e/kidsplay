@@ -1744,3 +1744,153 @@ img.book-avatar {
   background: #4c6ef5;
   color: #fff;
 }
+
+/* Schaken (koninkrijk) */
+.game-screen:has(.schaken) {
+  padding: 0;
+}
+
+.game-area:has(.schaken) {
+  display: block;
+  min-height: 0;
+}
+
+.schaken {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 16px;
+  background: radial-gradient(circle at 50% 30%, #fff0f8 0%, #ffd9ee 55%, #e9d5ff 100%);
+}
+
+.sk-board {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  width: min(calc(100vw - 32px - 104px - 24px), calc(100vh - 32px));
+  aspect-ratio: 1;
+  border: 10px solid #c58a00;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 4px #ffd43b,
+    0 12px 0 rgb(0 0 0 / 18%);
+  overflow: hidden;
+}
+
+.sk-sq {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.sk-light {
+  background: #fff3fa;
+}
+
+.sk-dark {
+  background: #f3b6da;
+}
+
+.sk-selected {
+  background: #ffe066;
+}
+
+.sk-piece {
+  display: block;
+  width: 92%;
+  height: 92%;
+}
+
+.sk-piece svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 25%));
+}
+
+.sk-target::after {
+  content: '';
+  position: absolute;
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: #ffd43b;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 14px #ffd43b;
+  animation: sk-glow 1.2s ease-in-out infinite;
+}
+
+.sk-capture {
+  background: #ffe066;
+  box-shadow: inset 0 0 0 5px #ff6b9a;
+}
+
+.sk-landed {
+  animation: sk-pop 0.35s ease-out;
+}
+
+@keyframes sk-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes sk-glow {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+.sk-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sk-pick {
+  width: 80px;
+  height: 80px;
+  padding: 4px;
+  border-radius: 24px;
+  background: #fff;
+  font-size: 44px;
+  box-shadow: 0 5px 0 rgb(0 0 0 / 18%);
+}
+
+.sk-pick svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sk-pick-on {
+  background: #ffe066;
+  box-shadow:
+    0 0 0 4px #ff6b9a,
+    0 5px 0 rgb(0 0 0 / 18%);
+}
+
+@media (orientation: portrait) {
+  .schaken {
+    flex-direction: column;
+  }
+
+  .sk-board {
+    width: min(calc(100vw - 32px), calc(100vh - 32px - 104px - 24px));
+  }
+
+  .sk-picker {
+    flex-direction: row;
+  }
+}

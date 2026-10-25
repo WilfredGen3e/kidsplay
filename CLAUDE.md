@@ -15,6 +15,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - Ook als webapp/PWA (iPad): `vite.config.ts` schrijft `dist/sw.js` (uit `src/sw.template.js`) met alle bestanden; `public/manifest.webmanifest` + iconen. GitHub Actions (`.github/workflows/pages.yml`) bouwt en publiceert naar Pages. Zie `docs/PWA.md`.
 - Foto's delen tussen apparaten: branch `fotos` op GitHub, lezen via raw.githubusercontent.com, schrijven alleen met token in `beheer.html`.
 - Back-up: ouder → 💾 Back-up downloadt/herstelt alles als één JSON (`src/platform/backup.ts`, Blobs als base64).
+- Uitleg in het schaakspel: één zinnetje op AVI M3-niveau (korte woorden), zodat de oudste het zelf kan lezen.
 - Doelgroep 4–10 jaar: grote klikvlakken (min. 64×64 px), iconen i.p.v. tekst, geen foutmeldingen.
 
 ## Structuur
@@ -28,6 +29,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - `src/beheer/` + `beheer.html`: aparte beheerconsole (token, foto's delen met code, bibliotheek beheren). Zie `docs/BIBLIOTHEEK.md`.
 - `src/games/puzzle/`: het fotopuzzelspel
   - `grid.ts` (raster), `shapes.ts` (puzzelvormen), `image.ts` (foto → stukken), `snap.ts` (vastklikken, puur en getest), `view.ts` (lade/canvas/slepen), `progress.ts` (resultaten + tussenstand), `viewport.ts` (zoom en verschuiving van het speelvlak, puur en getest), `saver.ts` (vertraagd bewaren van de tussenstand), `meting.ts` (laadtijd, geheugen en stop-melding van grote puzzels), `model.ts` (puzzel/instellingen), `manage.ts` (puzzels maken voor de ouder), `crop.ts` (uitsnede), `cropper.ts` (uitsnede-editor), `library.ts`/`library-admin.ts`/`library-ui.ts` (gedeelde fotobibliotheek: code of alles toevoegen), `celebration.ts`, `sound.ts`, `index.ts` (kindflow).
+- `src/games/schaken/`: schaken in koninkrijkthema voor de oudste (5 jaar): `rules.ts` (zetregels, puur en getest), `pieces.ts` (figuurtjes als SVG: prinsesje, kasteel, tovenares, eenhoorn, koningin, koning; wit = roze, zwart = paars), `view.ts` (oefenbord: stuk kiezen, tikken, bolletjes), `index.ts`.
 - `src/games/dummy/`: testspel, alleen nog voor `app.test.ts`.
 - Tests: `npm test` (vitest, jsdom, fake-indexeddb). Slepen/layout alleen te controleren in een echte browser.
 
@@ -43,7 +45,7 @@ Volledige requirements: [docs/PRD.md](docs/PRD.md).
 - [x] Fase 8 – Fotobibliotheek: foto's delen vanaf de laptop (beheerconsole, token) en op andere apparaten ophalen met 5-cijferige code of via de bibliotheek, zie `docs/BIBLIOTHEEK.md` (getest in Chromium met nep-GitHub; nog niet tegen de echte GitHub)
 - [ ] Fase 9 – Grote puzzels voor volwassenen (vinkje 🧑, tot 500 stukjes, zoomen/verschuiven): stap 1 klaar (vinkje, aantallen, resolutie, geen punten), stap 2 klaar (zoomen en verschuiven: `viewport.ts`, `world`-laag in `view.ts`), stap 3 klaar (lade met kolommen, filter Rand/Rest en tellers), stap 4 klaar (tussenstand vertraagd bewaren via `saver.ts`, meetgegevens en stop-melding via `meting.ts`). Open: meten op een echte iPad (stukjes nemen bij 500 ongeveer 120 MB canvasgeheugen in). Zie PRD-hoofdstuk "Puzzels voor volwassenen"
 - [x] Fase 10 – Minder verslavend: sessieregel vervangen door dagmaximum aan stickers (standaard 2), spaarpot zonder aftelling, één cadeautje en stickers standaard op volgorde, feestscherm met 🏠 Klaar als hoofdknop. Zie PRD "Dagmaximum" en "Geen gokelement" (nog niet in een echte browser bekeken)
-- Verbeterpunten en beslissingen: `docs/VERBETERINGEN.md`
+- [ ] Fase 11 – Schaken voor de oudste, met leerlevels (toren, loper, dame, paard, koning, pion, slaan, veilig staan, mat in één, kleine partij) en automatisch niveau: stap 1 klaar (spel aangemeld, bord, figuurtjes), stap 2 klaar (zetregels + oefenbord, nog geen levels, stem of voortgang). Open: levels 1–6, automatisch niveau (`levels.ts`), levels 7–10. Schaakregels (schaak, rokade, en passant) ontbreken nog bewust `docs/VERBETERINGEN.md`
 
 ## Werkwijze
 
