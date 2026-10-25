@@ -122,3 +122,32 @@ export function makeExercises(kind: Kind, rng: () => number = Math.random, easy 
   }
   return result;
 }
+
+const CAPTURE_KINDS: Kind[] = ['R', 'B', 'Q', 'N', 'K'];
+
+/**
+ * Level 7: pak met een stuk een zwart stuk (de ster staat erop). Steeds een ander stuk;
+ * de eerste opdrachtjes in één zet, de laatste twee in twee zetten (of allemaal in één zet als `easy`).
+ */
+export function captureExercises(rng: () => number = Math.random, easy = false): Exercise[] {
+  const kinds = [...CAPTURE_KINDS];
+  for (let i = kinds.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+  }
+  const wanted = easy ? [1, 1, 1, 1, 1] : [1, 1, 1, 2, 2];
+  const result: Exercise[] = [];
+  wanted.forEach((steps, i) => {
+    for (let tries = 0; tries < 5000; tries++) {
+      const start = randomSquare(rng);
+      const goal = randomSquare(rng);
+      if (sameSquare(start, goal)) continue;
+      const ex: Exercise = { kind: kinds[i], start, goal, enemies: [goal] };
+      if (stepsLeft(ex, start) === steps) {
+        result.push(ex);
+        return;
+      }
+    }
+  });
+  return result;
+}

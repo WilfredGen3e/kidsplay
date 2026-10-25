@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, sentenceFor, themeOf, timesDone } from './levels';
+import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, makeItems, sentenceFor, themeOf, timesDone } from './levels';
 
 describe('voortgang', () => {
   it('begint leeg bij level 1', () => {
@@ -84,5 +84,17 @@ describe('zinnetjes', () => {
     const hit = { ...free, enemies: [free.goal] };
     expect(sentenceFor(pawn, free)).toBe(pawn.sentence);
     expect(sentenceFor(pawn, hit)).toBe(pawn.captureSentence);
+  });
+});
+
+describe('makeItems', () => {
+  it('elk level maakt opdrachtjes, ook makkelijk', () => {
+    expect(LEVELS).toHaveLength(10);
+    for (const level of LEVELS) {
+      for (const easy of [false, true]) {
+        const items = makeItems(level, easy);
+        expect(items.length).toBe(level.mode === 'game' ? 3 : 5);
+      }
+    }
   });
 });

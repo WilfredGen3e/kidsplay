@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LEVELS } from './levels';
-import { EXERCISES_PER_LEVEL, bestMoves, makeExercises, stepsLeft, type Exercise } from './exercises';
+import { EXERCISES_PER_LEVEL, bestMoves, captureExercises, makeExercises, stepsLeft, type Exercise } from './exercises';
 import { sameSquare } from './rules';
 
 /** Vaste reeks "willekeurige" getallen, zodat de test elke keer hetzelfde doet. */
@@ -88,3 +88,21 @@ describe('makeExercises', () => {
     }
   });
 });
+
+describe('captureExercises', () => {
+  it('vijf opdrachtjes, elk met een ander stuk, de ster staat op een tegenstander', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const list = captureExercises(seeded(seed));
+      expect(list).toHaveLength(5);
+      expect(new Set(list.map((ex) => ex.kind)).size).toBe(5);
+      for (const ex of list) {
+        expect(ex.enemies.some((sq) => sameSquare(sq, ex.goal))).toBe(true);
+        expect(Number.isFinite(stepsLeft(ex, ex.start))).toBe(true);
+      }
+    }
+  });
+  it('makkelijk = alles in één zet', () => {
+    for (const ex of captureExercises(seeded(9), true)) expect(stepsLeft(ex, ex.start)).toBe(1);
+  });
+});
+

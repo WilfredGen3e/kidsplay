@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   emptyBoard,
+  inCheck,
+  isCheckmate,
+  legalMoves,
   movePiece,
   movesFor,
   pieceAt,
@@ -117,5 +120,44 @@ describe('movePiece', () => {
     const board = put(emptyBoard(), 2, 6, 'P');
     const result = movePiece(board, { col: 2, row: 6 }, { col: 2, row: 7 });
     expect(pieceAt(result.board, { col: 2, row: 7 })?.kind).toBe('Q');
+  });
+});
+
+describe('schaak en mat', () => {
+  const parse = (...items: [Kind, Color, number, number][]) =>
+    items.reduce((b, [kind, color, col, row]) => put(b, col, row, kind, color), emptyBoard());
+
+  it('ziet schaak door een toren', () => {
+    const board = parse(['K', 'b', 7, 7], ['R', 'w', 0, 7], ['K', 'w', 0, 0]);
+    expect(inCheck(board, 'b')).toBe(true);
+    expect(inCheck(board, 'w')).toBe(false);
+  });
+  it('een pion geeft schaak schuin, niet recht vooruit', () => {
+    expect(inCheck(parse(['K', 'b', 4, 4], ['P', 'w', 3, 3], ['K', 'w', 0, 0]), 'b')).toBe(true);
+    expect(inCheck(parse(['K', 'b', 4, 4], ['P', 'w', 4, 3], ['K', 'w', 0, 0]), 'b')).toBe(false);
+  });
+  it('een koning mag niet naast de andere koning of in schaak lopen', () => {
+    const board = parse(['K', 'w', 4, 4], ['K', 'b', 4, 6]);
+    expect(legalMoves(board, { col: 4, row: 4 })).not.toContainEqual({ col: 4, row: 5 });
+    expect(legalMoves(board, { col: 4, row: 4 })).toContainEqual({ col: 3, row: 4 });
+  });
+  it('een vastgezet stuk mag niet weg', () => {
+    const board = parse(['K', 'w', 0, 0], ['R', 'w', 3, 0], ['R', 'b', 7, 0], ['K', 'b', 7, 7]);
+    const moves = legalMoves(board, { col: 3, row: 0 });
+    expect(moves.every((m) => m.row === 0)).toBe(true);
+  });
+  it('herkent een mat (rij achteraan)', () => {
+    const board = parse(
+      ['K', 'b', 7, 7],
+      ['P', 'b', 6, 6],
+      ['P', 'b', 7, 6],
+      ['R', 'w', 0, 7],
+      ['K', 'w', 6, 0],
+    );
+    expect(isCheckmate(board, 'b')).toBe(true);
+  });
+  it('schaak is nog geen mat als de koning weg kan', () => {
+    const board = parse(['K', 'b', 7, 7], ['R', 'w', 0, 7], ['K', 'w', 0, 0]);
+    expect(isCheckmate(board, 'b')).toBe(false);
   });
 });

@@ -18,8 +18,12 @@ export interface BoardState {
   moved?: Square;
   /** Het vakje met de ster. */
   goal?: Square;
-  /** Het bolletje dat extra opvalt als het kind hulp nodig heeft. */
-  hint?: Square;
+  /** Bolletjes die extra opvallen als het kind hulp nodig heeft. */
+  hints?: Square[];
+  /** Het vakje van een koning die schaak staat (rode rand). */
+  check?: Square;
+  /** Het vakje waar het stuk op een gevaarlijke plek staat (schudt even). */
+  oops?: Square;
   /** Het doel is gehaald: de ster danst. */
   won?: boolean;
 }
@@ -37,7 +41,9 @@ export function renderBoard(boardEl: HTMLElement, state: BoardState, onTap: (sq:
       cell.classList.add((col + row) % 2 === 0 ? 'sk-dark' : 'sk-light', `sk-v${PATCHES[row * SIZE + col]}`);
       if (state.selected && sameSquare(state.selected, sq)) cell.classList.add('sk-selected');
       if (state.targets.some((t) => sameSquare(t, sq))) cell.classList.add(piece ? 'sk-capture' : 'sk-target');
-      if (state.hint && sameSquare(state.hint, sq)) cell.classList.add('sk-hint');
+      if (state.hints?.some((h) => sameSquare(h, sq))) cell.classList.add('sk-hint');
+      if (state.check && sameSquare(state.check, sq)) cell.classList.add('sk-check');
+      if (state.oops && sameSquare(state.oops, sq)) cell.classList.add('sk-oops');
       if (state.goal && sameSquare(state.goal, sq)) {
         cell.classList.add('sk-goal');
         if (piece) cell.classList.add('sk-goal-piece');

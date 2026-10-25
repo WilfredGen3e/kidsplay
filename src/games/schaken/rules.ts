@@ -161,3 +161,46 @@ export function movePiece(board: Board, from: Square, to: Square): MoveResult {
   const landed: Piece = piece.kind === 'P' && to.row === lastRow ? { kind: 'Q', color: piece.color } : piece;
   return { board: withPiece(withPiece(board, from, undefined), to, landed), captured };
 }
+
+export function otherColor(color: Color): Color {
+  return color === 'w' ? 'b' : 'w';
+}
+
+export function findKing(board: Board, color: Color): Square | undefined {
+  const i = board.findIndex((p) => p?.kind === 'K' && p.color === color);
+  return i === -1 ? undefined : { col: i % SIZE, row: Math.floor(i / SIZE) };
+}
+
+/** Alle vakjes met een stuk van `color`. */
+export function squaresOf(board: Board, color: Color): Square[] {
+  const result: Square[] = [];
+  board.forEach((p, i) => {
+    if (p?.color === color) result.push({ col: i % SIZE, row: Math.floor(i / SIZE) });
+  });
+  return result;
+}
+
+/** Kan een stuk van `by` het stuk op `sq` slaan? (`sq` moet bezet zijn door een stuk van de ander.) */
+export function isAttacked(board: Board, sq: Square, by: Color): boolean {
+  return squaresOf(board, by).some((from) => movesFor(board, from).some((m) => sameSquare(m, sq)));
+}
+
+export function inCheck(board: Board, color: Color): boolean {
+  const king = findKing(board, color);
+  return king !== undefined && isAttacked(board, king, otherColor(color));
+}
+
+/** Zetten die mogen: de koning van de speler staat daarna niet schaak. */
+export function legalMoves(board: Board, from: Square): Square[] {
+  const piece = pieceAt(board, from);
+  if (!piece) return [];
+  return movesFor(board, from).filter((to) => !inCheck(movePiece(board, from, to).board, piece.color));
+}
+
+export function hasLegalMove(board: Board, color: Color): boolean {
+  return squaresOf(board, color).some((from) => legalMoves(board, from).length > 0);
+}
+
+export function isCheckmate(board: Board, color: Color): boolean {
+  return inCheck(board, color) && !hasLegalMove(board, color);
+}

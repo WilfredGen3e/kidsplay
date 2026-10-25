@@ -1,9 +1,20 @@
 import type { Theme } from './pieces';
+import { pieceName } from './pieces';
 import type { Kind } from './rules';
-import type { Exercise } from './exercises';
+import { captureExercises, makeExercises, type Exercise } from './exercises';
+import { gameExercises, isPuzzle, mateExercises, safeExercises, type Puzzle } from './puzzles';
+
+export type LevelMode = 'reach' | 'capture' | 'safe' | 'mate' | 'game';
 
 export interface Level {
+  /** Het stuk op de tegel; bij `reach` ook het stuk dat het kind leert bewegen. */
   kind: Kind;
+  /** Naam voor het ouderoverzicht als het geen los stuk is. */
+  title?: string;
+  /** Soort opdrachtjes; standaard `reach` (loop naar de ster). */
+  mode?: LevelMode;
+  /** Plaatje in de hoek van de tegel voor de levels die geen los stuk leren. */
+  badge?: string;
   /** Eén zinnetje op AVI M3-niveau: korte woorden, zodat een kind van 5 het zelf kan lezen. */
   sentence: string;
   /** Zinnetje voor opdrachtjes waarin geslagen wordt. */
@@ -18,10 +29,36 @@ export const LEVELS: readonly Level[] = [
   { kind: 'N', sentence: 'De eenhoorn springt.' },
   { kind: 'K', sentence: 'De koning loopt één stap.' },
   { kind: 'P', sentence: 'De prinses loopt vooruit.', captureSentence: 'De prinses pakt schuin.' },
+  { kind: 'N', title: 'slaan', mode: 'capture', badge: '⚔️', sentence: 'Pak het stuk met de ster.' },
+  { kind: 'K', title: 'veilig', mode: 'safe', badge: '🛡️', sentence: 'Ga waar niemand je pakt.' },
+  { kind: 'Q', title: 'mat', mode: 'mate', badge: '🎯', sentence: 'Maak de koning mat.' },
+  { kind: 'P', title: 'partij', mode: 'game', badge: '🏁', sentence: 'Loop naar de overkant.' },
 ];
 
-export function sentenceFor(level: Level, ex: Exercise): string {
-  return ex.enemies.length > 0 && level.captureSentence ? level.captureSentence : level.sentence;
+export type Item = Exercise | Puzzle;
+
+export function levelName(level: Level): string {
+  return level.title ?? pieceName(level.kind);
+}
+
+/** De opdrachtjes van een level; `easy` = makkelijker, voor een kind dat vorige keer veel omwegen nam. */
+export function makeItems(level: Level, easy = false, rng: () => number = Math.random): Item[] {
+  switch (level.mode ?? 'reach') {
+    case 'capture':
+      return captureExercises(rng, easy);
+    case 'safe':
+      return safeExercises(rng, easy);
+    case 'mate':
+      return mateExercises(rng);
+    case 'game':
+      return gameExercises(rng, easy);
+    default:
+      return makeExercises(level.kind, rng, easy);
+  }
+}
+
+export function sentenceFor(level: Level, item: Item): string {
+  return !isPuzzle(item) && item.enemies.length > 0 && level.captureSentence ? level.captureSentence : level.sentence;
 }
 
 /** Bewaard per kind. */

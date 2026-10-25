@@ -3,10 +3,9 @@ import { spawnConfetti } from '../../ui/confetti';
 import { el, iconButton } from '../../ui/dom';
 import { playFanfare } from '../../ui/sound';
 import { savingsBar } from '../../ui/savings';
-import { EXERCISES_PER_LEVEL, makeExercises } from './exercises';
-import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, themeOf, timesDone, type ChessProgress } from './levels';
+import { LEVELS, currentLevel, finishLevel, isEasy, levelName, levelsDone, makeItems, themeOf, timesDone, type ChessProgress } from './levels';
 import { mountLevel } from './play';
-import { THEMES, pieceName, pieceSvg, type Theme } from './pieces';
+import { THEMES, pieceSvg, type Theme } from './pieces';
 import { mountBoard } from './view';
 
 export const GAME_ID = 'schaken';
@@ -53,11 +52,12 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       const done = timesDone(progress, i) > 0;
       const tile = el('button', 'sk-tile');
       tile.type = 'button';
-      tile.setAttribute('aria-label', pieceName(level.kind));
+      tile.setAttribute('aria-label', levelName(level));
       tile.classList.toggle('sk-tile-next', i === next);
       const icon = el('span', 'sk-tile-icon');
       icon.innerHTML = pieceSvg({ kind: level.kind, color: 'w' }, theme);
       tile.append(icon, el('span', 'sk-tile-badge', done ? '⭐' : i === next ? '▶️' : ''));
+      if (level.badge) tile.append(el('span', 'sk-tile-mode', level.badge));
       tile.addEventListener('click', () => void playLevel(i));
       grid.append(tile);
     });
@@ -92,21 +92,22 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     if (stopped) return;
     swap(() => {
       const level = LEVELS[levelIndex];
+      const items = makeItems(level, isEasy(progress, levelIndex));
       stop = mountLevel(root, {
         level,
         theme: themeOf(progress),
-        exercises: makeExercises(level.kind, Math.random, isEasy(progress, levelIndex)),
+        items,
         soundOn: ctx.profile.soundOn,
         // Direct aanroepen (zonder await): de wachtrij van de spaarpunten loopt dan voor op het lezen van de stand.
         onExerciseDone: () => void ctx.addPoints(1).catch(() => {}),
-        onFinished: (clean) => void finished(levelIndex, clean),
+        onFinished: (clean) => void finished(levelIndex, clean, items.length),
         onBack: () => void showMap(),
       });
     });
   }
 
-  async function finished(levelIndex: number, clean: number) {
-    void update((current) => finishLevel(current, levelIndex, clean, EXERCISES_PER_LEVEL).progress);
+  async function finished(levelIndex: number, clean: number, total: number) {
+    void update((current) => finishLevel(current, levelIndex, clean, total).progress);
     const savings = await ctx.savings().catch(() => undefined);
     if (stopped) return;
     const overlay = el('div', 'celebration');
@@ -146,7 +147,7 @@ export const schakenGame: GameModule = {
     return LEVELS.flatMap((level, i) => {
       const times = timesDone(p, i);
       return times > 0
-        ? [{ title: `Level ${i + 1}: ${pieceName(level.kind)}`, details: [`${times}× gehaald`], done: true }]
+        ? [{ title: `Level ${i + 1}: ${levelName(level)}`, details: [`${times}× gehaald`], done: true }]
         : [];
     });
   },
