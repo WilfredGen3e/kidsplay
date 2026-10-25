@@ -74,4 +74,17 @@ describe('makeExercises', () => {
       }
     }
   });
+
+  it('de makkelijke reeks is niet lastiger dan de gewone', () => {
+    for (const level of LEVELS) {
+      for (let seed = 1; seed <= 20; seed++) {
+        const total = (easy: boolean) =>
+          makeExercises(level.kind, seeded(seed), easy)
+            .map((ex) => stepsLeft(ex, ex.start))
+            .reduce((a, b) => a + b, 0);
+        expect(makeExercises(level.kind, seeded(seed), true)).toHaveLength(EXERCISES_PER_LEVEL);
+        expect(total(true)).toBeLessThanOrEqual(total(false));
+      }
+    }
+  });
 });

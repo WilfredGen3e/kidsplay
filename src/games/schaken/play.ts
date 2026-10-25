@@ -14,10 +14,10 @@ export interface PlayOptions {
   level: Level;
   exercises: Exercise[];
   soundOn: boolean;
-  /** Een opdrachtje is gehaald (voor de spaarpunten). */
-  onExerciseDone: () => void;
-  /** Alle opdrachtjes van het level zijn gehaald. */
-  onFinished: () => void;
+  /** Een opdrachtje is gehaald (voor de spaarpunten); `clean` als het zonder omweg ging. */
+  onExerciseDone: (clean: boolean) => void;
+  /** Alle opdrachtjes van het level zijn gehaald; `clean` is het aantal dat zonder omweg ging. */
+  onFinished: (clean: number) => void;
   onBack: () => void;
 }
 
@@ -29,6 +29,7 @@ export function mountLevel(root: HTMLElement, opts: PlayOptions): () => void {
   let moved: Square | undefined;
   let won = false;
   let misses = 0;
+  let clean = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const wrap = el('div', 'schaken schaken-play');
@@ -78,14 +79,15 @@ export function mountLevel(root: HTMLElement, opts: PlayOptions): () => void {
         won = true;
         render();
         if (opts.soundOn) playSparkle();
-        opts.onExerciseDone();
+        if (misses === 0) clean += 1;
+        opts.onExerciseDone(misses === 0);
         timer = setTimeout(() => {
           if (index + 1 < opts.exercises.length) {
             index += 1;
             begin();
           } else {
             index += 1;
-            opts.onFinished();
+            opts.onFinished(clean);
           }
         }, NEXT_DELAY_MS);
         return;

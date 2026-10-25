@@ -23,17 +23,18 @@ export function sentenceFor(level: Level, ex: Exercise): string {
   return ex.enemies.length > 0 && level.captureSentence ? level.captureSentence : level.sentence;
 }
 
-/** Bewaard per kind: hoe vaak elk level is uitgespeeld (sleutel = nummer van het level). */
+/** Bewaard per kind. */
 export interface ChessProgress {
+  /** Hoe vaak elk level is uitgespeeld (sleutel = nummer van het level). */
   done: Record<string, number>;
+  /** Het level waar het kind nu aan toe is (het ▶️); ontbreekt bij oudere voortgang. */
+  current?: number;
+  /** Levels waar het vorige keer veel misging: de volgende keer makkelijkere opdrachtjes. */
+  easy?: Record<string, boolean>;
 }
 
 export function timesDone(progress: ChessProgress | undefined, level: number): number {
   return progress?.done[String(level)] ?? 0;
-}
-
-export function recordLevelDone(progress: ChessProgress | undefined, level: number): ChessProgress {
-  return { done: { ...progress?.done, [String(level)]: timesDone(progress, level) + 1 } };
 }
 
 /** Aantal levels dat minstens één keer is uitgespeeld. */
@@ -41,8 +42,41 @@ export function levelsDone(progress: ChessProgress | undefined): number {
   return LEVELS.filter((_, i) => timesDone(progress, i) > 0).length;
 }
 
-/** Het eerste level dat nog niet is gehaald; `undefined` als ze allemaal zijn gehaald. */
-export function nextLevel(progress: ChessProgress | undefined): number | undefined {
-  const index = LEVELS.findIndex((_, i) => timesDone(progress, i) === 0);
-  return index === -1 ? undefined : index;
+/** Moet dit level makkelijkere opdrachtjes krijgen? */
+export function isEasy(progress: ChessProgress | undefined, level: number): boolean {
+  return progress?.easy?.[String(level)] === true;
+}
+
+/** Het level waar het kind nu aan toe is; `undefined` als ze allemaal zijn gehaald. */
+export function currentLevel(progress: ChessProgress | undefined): number | undefined {
+  const fallback = LEVELS.findIndex((_, i) => timesDone(progress, i) === 0);
+  const index = progress?.current ?? (fallback === -1 ? LEVELS.length : fallback);
+  return index >= LEVELS.length ? undefined : index;
+}
+
+/** Wat er na een level gebeurt: door naar het volgende, nog een keer, of eerst makkelijker oefenen. */
+export type Outcome = 'up' | 'same' | 'easier';
+
+/**
+ * Verwerkt een uitgespeeld level. `clean` is het aantal opdrachtjes dat in één keer goed ging, zonder omweg.
+ * Vrijwel alles in één keer goed: door naar het volgende level. Vrijwel alles met omwegen: hetzelfde level
+ * nog een keer met makkelijkere opdrachtjes. Daartussen: hetzelfde level opnieuw. Nooit terug naar een lager level.
+ */
+export function finishLevel(
+  progress: ChessProgress | undefined,
+  level: number,
+  clean: number,
+  total: number,
+): { progress: ChessProgress; outcome: Outcome } {
+  const outcome: Outcome = clean >= total - 1 ? 'up' : clean <= 1 ? 'easier' : 'same';
+  const key = String(level);
+  const easy = { ...progress?.easy };
+  if (outcome === 'up') delete easy[key];
+  if (outcome === 'easier') easy[key] = true;
+  const before = currentLevel(progress) ?? LEVELS.length;
+  const current = outcome === 'up' ? Math.max(before, level + 1) : before;
+  return {
+    progress: { done: { ...progress?.done, [key]: timesDone(progress, level) + 1 }, current, easy },
+    outcome,
+  };
 }

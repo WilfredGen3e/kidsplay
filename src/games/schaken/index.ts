@@ -3,8 +3,8 @@ import { spawnConfetti } from '../../ui/confetti';
 import { el, iconButton } from '../../ui/dom';
 import { playFanfare } from '../../ui/sound';
 import { savingsBar } from '../../ui/savings';
-import { makeExercises } from './exercises';
-import { LEVELS, levelsDone, nextLevel, recordLevelDone, timesDone, type ChessProgress } from './levels';
+import { EXERCISES_PER_LEVEL, makeExercises } from './exercises';
+import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, timesDone, type ChessProgress } from './levels';
 import { mountLevel } from './play';
 import { pieceName, pieceSvg } from './pieces';
 import { mountBoard } from './view';
@@ -45,7 +45,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     stop = () => {};
     const progress = await loadProgress();
     if (stopped) return;
-    const next = nextLevel(progress);
+    const next = currentLevel(progress);
     const map = el('div', 'schaken sk-map');
     const grid = el('div', 'sk-levels');
     LEVELS.forEach((level, i) => {
@@ -57,7 +57,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       const icon = el('span', 'sk-tile-icon');
       icon.innerHTML = pieceSvg({ kind: level.kind, color: 'w' });
       tile.append(icon, el('span', 'sk-tile-badge', done ? '⭐' : i === next ? '▶️' : ''));
-      tile.addEventListener('click', () => playLevel(i));
+      tile.addEventListener('click', () => void playLevel(i));
       grid.append(tile);
     });
     const free = el('button', 'sk-tile sk-tile-free');
@@ -70,23 +70,25 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     root.replaceChildren(map);
   }
 
-  function playLevel(levelIndex: number) {
+  async function playLevel(levelIndex: number) {
+    const progress = await loadProgress();
+    if (stopped) return;
     swap(() => {
       const level = LEVELS[levelIndex];
       stop = mountLevel(root, {
         level,
-        exercises: makeExercises(level.kind),
+        exercises: makeExercises(level.kind, Math.random, isEasy(progress, levelIndex)),
         soundOn: ctx.profile.soundOn,
         // Direct aanroepen (zonder await): de wachtrij van de spaarpunten loopt dan voor op het lezen van de stand.
         onExerciseDone: () => void ctx.addPoints(1).catch(() => {}),
-        onFinished: () => void finished(levelIndex),
+        onFinished: (clean) => void finished(levelIndex, clean),
         onBack: () => void showMap(),
       });
     });
   }
 
-  async function finished(levelIndex: number) {
-    void update((current) => recordLevelDone(current, levelIndex));
+  async function finished(levelIndex: number, clean: number) {
+    void update((current) => finishLevel(current, levelIndex, clean, EXERCISES_PER_LEVEL).progress);
     const savings = await ctx.savings().catch(() => undefined);
     if (stopped) return;
     const overlay = el('div', 'celebration');

@@ -65,12 +65,21 @@ const STEPS: Partial<Record<Kind, number[]>> = {
   K: [1, 2, 2, 3, 4],
 };
 
+/** Makkelijkere reeks voor een kind dat veel omwegen nam: vooral korte opdrachtjes. */
+const EASY_STEPS: Partial<Record<Kind, number[]>> = {
+  R: [1, 1, 1, 1, 2],
+  B: [1, 1, 1, 1, 2],
+  Q: [1, 1, 1, 1, 1],
+  N: [1, 1, 1, 2, 2],
+  K: [1, 1, 1, 2, 2],
+};
+
 const randomSquare = (rng: () => number): Square => ({
   col: Math.floor(rng() * SIZE),
   row: Math.floor(rng() * SIZE),
 });
 
-function pawnExercises(rng: () => number): Exercise[] {
+function pawnExercises(rng: () => number, easy: boolean): Exercise[] {
   const col = Math.floor(rng() * SIZE);
   const side = (c: number) => (c === 0 ? 1 : c === SIZE - 1 || rng() < 0.5 ? -1 : 1);
   const diag = (c: number, row: number): Square => ({ col: c + side(c), row });
@@ -86,16 +95,16 @@ function pawnExercises(rng: () => number): Exercise[] {
   return [
     free({ col, row: 1 }, { col, row: 2 }),
     free({ col, row: 1 }, { col, row: 3 }),
-    free({ col, row: 1 }, { col, row: 4 }),
+    easy ? free({ col, row: 2 }, { col, row: 3 }) : free({ col, row: 1 }, { col, row: 4 }),
     capture(second(col), diag(col, 3)),
-    capture(third(col), diag(col, 4), { col, row: 4 }),
+    easy ? capture(second(col), diag(col, 3)) : capture(third(col), diag(col, 4), { col, row: 4 }),
   ];
 }
 
-/** Maakt de vijf opdrachtjes van een level: steeds een andere ster, makkelijk naar lastiger. */
-export function makeExercises(kind: Kind, rng: () => number = Math.random): Exercise[] {
-  if (kind === 'P') return pawnExercises(rng);
-  const wanted = STEPS[kind] ?? [1, 1, 2, 2, 2];
+/** Maakt de vijf opdrachtjes van een level: steeds een andere ster, makkelijk naar lastiger (of met `easy` extra makkelijk). */
+export function makeExercises(kind: Kind, rng: () => number = Math.random, easy = false): Exercise[] {
+  if (kind === 'P') return pawnExercises(rng, easy);
+  const wanted = (easy ? EASY_STEPS : STEPS)[kind] ?? [1, 1, 2, 2, 2];
   const result: Exercise[] = [];
   for (const steps of wanted) {
     for (let tries = 0; tries < 5000; tries++) {
