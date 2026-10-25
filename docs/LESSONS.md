@@ -109,3 +109,8 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 ## CSS: media query vóór de gewone regel wordt overschreven
 - **Wat:** `@media (orientation: portrait) { .sk-side { flex-direction: row } }` stond boven de gewone `.sk-side`-regel (die later in het bestand kwam) en deed daarom niets. Bij gelijke specificiteit wint de laatste regel.
 - **Fix:** zet media queries ná de basisregels die ze aanpassen (of verhoog de specificiteit). Ook gezien: de huisknop van het platform ligt linksboven over een schermvullend spel; geef zo'n spel `padding-left`/`padding-top` van ongeveer 96px.
+
+## Patchwork-bord: patroon niet aan de vakjeskleur koppelen
+- **Wat:** de eerste verdeling van lapjes was `(col*3 + row*5) % 4`. Die heeft dezelfde pariteit als `col + row`, dus lichte vakjes kregen alleen de patronen 1 en 3 en donkere alleen 0 en 2. Het dambord was daardoor nauwelijks te zien (blauw naast blauw). Een tweede formule gaf verticale banen.
+- **Fix:** een vaste tabel (`PATCHES` in `board.ts`) die onregelmatig is, op lichte én donkere vakjes alle vier de lapjes gebruikt en geen twee gelijke vakjes van dezelfde kleur schuin of twee ver in een rij naast elkaar heeft. Licht en donker blijven te onderscheiden doordat licht bleek is en donker stevig van kleur.
+- **Let op:** ook de vakjes met een gekozen stuk of een te slaan stuk moeten hun patroon kwijt (`background-image: none`), anders valt de gele markering weg tegen de ruitjes.

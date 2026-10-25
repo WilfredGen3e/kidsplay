@@ -2081,3 +2081,99 @@ img.book-avatar {
     0 0 0 4px #ff6b9a,
     0 5px 0 rgb(0 0 0 / 18%);
 }
+
+/* Schaken: thema hout (patchwork-quilt, zonnige weide) */
+.sk-theme-hout {
+  background:
+    radial-gradient(circle at 12% -4%, rgb(255 244 170 / 95%) 0, transparent 38%),
+    linear-gradient(180deg, #bfe6ff 0%, #e4f4ff 45%, #fff6d6 100%);
+}
+
+.sk-theme-hout::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 230 170%22 width=%22230%22 height=%22170%22%3E%3Cpath d=%22M40 92 Q46 131.0 38 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2250%22 cy=%22134.9%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 50 134.9%29%22/%3E%3Ccircle cx=%2258.7%22 cy=%2292.0%22 r=%2213.6%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2245.8%22 cy=%22109.8%22 r=%2213.6%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2224.9%22 cy=%22103.0%22 r=%2213.6%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2224.9%22 cy=%2281.0%22 r=%2213.6%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2245.8%22 cy=%2274.2%22 r=%2213.6%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2240%22 cy=%2292%22 r=%229.2%22 fill=%22%23ffd43b%22/%3E%3Cpath d=%22M110 62 Q116 116.0 108 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%22120%22 cy=%22121.4%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 120 121.4%29%22/%3E%3Ccircle cx=%22124.5%22 cy=%2262.0%22 r=%2210.5%22 fill=%22%23ffb45e%22/%3E%3Ccircle cx=%22114.5%22 cy=%2275.7%22 r=%2210.5%22 fill=%22%23ffb45e%22/%3E%3Ccircle cx=%2298.3%22 cy=%2270.5%22 r=%2210.5%22 fill=%22%23ffb45e%22/%3E%3Ccircle cx=%2298.3%22 cy=%2253.5%22 r=%2210.5%22 fill=%22%23ffb45e%22/%3E%3Ccircle cx=%22114.5%22 cy=%2248.3%22 r=%2210.5%22 fill=%22%23ffb45e%22/%3E%3Ccircle cx=%22110%22 cy=%2262%22 r=%227.1%22 fill=%22%23fff3a0%22/%3E%3Cpath d=%22M170 108 Q176 139.0 168 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%22180%22 cy=%22142.1%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 180 142.1%29%22/%3E%3Ccircle cx=%22182.8%22 cy=%22108.0%22 r=%229.3%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22173.9%22 cy=%22120.1%22 r=%229.3%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22159.7%22 cy=%22115.5%22 r=%229.3%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22159.7%22 cy=%22100.5%22 r=%229.3%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22173.9%22 cy=%2295.9%22 r=%229.3%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22170%22 cy=%22108%22 r=%226.3%22 fill=%22%23ffe066%22/%3E%3Cpath d=%22M205 128 Q211 149.0 203 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%22215%22 cy=%22151.1%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 215 151.1%29%22/%3E%3Ccircle cx=%22214.3%22 cy=%22128.0%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22207.9%22 cy=%22136.9%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22197.4%22 cy=%22133.5%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22197.4%22 cy=%22122.5%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22207.9%22 cy=%22119.1%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%22205%22 cy=%22128%22 r=%224.6%22 fill=%22%23ffd43b%22/%3E%3C/svg%3E") left 8px bottom 4px / 220px auto no-repeat,
+    url("data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 230 170%22 width=%22230%22 height=%22170%22%3E%3Cpath d=%22M190 90 Q196 130.0 188 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%22200%22 cy=%22134.0%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 200 134.0%29%22/%3E%3Ccircle cx=%22209.6%22 cy=%2290.0%22 r=%2214.3%22 fill=%22%23ff8a6a%22/%3E%3Ccircle cx=%22196.0%22 cy=%22108.6%22 r=%2214.3%22 fill=%22%23ff8a6a%22/%3E%3Ccircle cx=%22174.2%22 cy=%22101.5%22 r=%2214.3%22 fill=%22%23ff8a6a%22/%3E%3Ccircle cx=%22174.2%22 cy=%2278.5%22 r=%2214.3%22 fill=%22%23ff8a6a%22/%3E%3Ccircle cx=%22196.0%22 cy=%2271.4%22 r=%2214.3%22 fill=%22%23ff8a6a%22/%3E%3Ccircle cx=%22190%22 cy=%2290%22 r=%229.7%22 fill=%22%23ffd43b%22/%3E%3Cpath d=%22M120 64 Q126 117.0 118 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%22130%22 cy=%22122.30000000000001%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 130 122.30000000000001%29%22/%3E%3Ccircle cx=%22133.6%22 cy=%2264.0%22 r=%229.9%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22124.2%22 cy=%2276.9%22 r=%229.9%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22109.0%22 cy=%2272.0%22 r=%229.9%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22109.0%22 cy=%2256.0%22 r=%229.9%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22124.2%22 cy=%2251.1%22 r=%229.9%22 fill=%22%23b48cf0%22/%3E%3Ccircle cx=%22120%22 cy=%2264%22 r=%226.7%22 fill=%22%23ffe066%22/%3E%3Cpath d=%22M62 110 Q68 140.0 60 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2272%22 cy=%22143.0%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 72 143.0%29%22/%3E%3Ccircle cx=%2274.8%22 cy=%22110.0%22 r=%229.3%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2265.9%22 cy=%22122.1%22 r=%229.3%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2251.7%22 cy=%22117.5%22 r=%229.3%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2251.7%22 cy=%22102.5%22 r=%229.3%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2265.9%22 cy=%2297.9%22 r=%229.3%22 fill=%22%23ff7fae%22/%3E%3Ccircle cx=%2262%22 cy=%22110%22 r=%226.3%22 fill=%22%23fff3a0%22/%3E%3Cpath d=%22M25 130 Q31 150.0 23 170%22 stroke=%22%234f9d3a%22 stroke-width=%224%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cellipse cx=%2235%22 cy=%22152.0%22 rx=%2211%22 ry=%225%22 fill=%22%236bbf4a%22 transform=%22rotate%28-30 35 152.0%29%22/%3E%3Ccircle cx=%2234.4%22 cy=%22130.0%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2227.9%22 cy=%22138.9%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2217.4%22 cy=%22135.5%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2217.4%22 cy=%22124.5%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2227.9%22 cy=%22121.1%22 r=%226.8%22 fill=%22%23ffffff%22/%3E%3Ccircle cx=%2225%22 cy=%22130%22 r=%224.6%22 fill=%22%23ffd43b%22/%3E%3C/svg%3E") right 8px bottom 4px / 220px auto no-repeat,
+    radial-gradient(ellipse 30% 20% at 0% 104%, #9bd97b 0 96%, transparent 100%),
+    radial-gradient(ellipse 30% 20% at 100% 104%, #8fd07a 0 96%, transparent 100%);
+}
+
+.sk-theme-hout .sk-board {
+  border-color: #a47c46;
+  box-shadow:
+    0 0 0 4px #dcbb82,
+    0 12px 0 rgb(80 50 20 / 22%);
+}
+
+.sk-theme-hout .sk-sq {
+  outline: 2px dashed rgb(255 255 255 / 70%);
+  outline-offset: -6px;
+}
+
+/* Lichte vakjes: bleek, met ruitjes, strepen of bloemetjes. Donkere vakjes: steviger kleur. */
+.sk-theme-hout .sk-light.sk-v0 {
+  background-color: #fff4d4;
+  background-image:
+    radial-gradient(circle at 28% 32%, #ff8fb5 0 3.5px, transparent 4.5px),
+    radial-gradient(circle at 70% 66%, #ffd43b 0 3px, transparent 4px);
+}
+
+.sk-theme-hout .sk-light.sk-v1 {
+  background-color: #eef7ff;
+  background-image:
+    linear-gradient(90deg, rgb(110 170 230 / 16%) 50%, transparent 50%),
+    linear-gradient(rgb(110 170 230 / 16%) 50%, transparent 50%);
+  background-size: 18px 18px;
+}
+
+.sk-theme-hout .sk-light.sk-v2 {
+  background-color: #fff3b8;
+  background-image: repeating-linear-gradient(90deg, transparent 0 9px, rgb(255 205 80 / 35%) 9px 18px);
+}
+
+.sk-theme-hout .sk-light.sk-v3 {
+  background-color: #fff0f5;
+  background-image:
+    linear-gradient(90deg, rgb(240 140 175 / 15%) 50%, transparent 50%),
+    linear-gradient(rgb(240 140 175 / 15%) 50%, transparent 50%);
+  background-size: 18px 18px;
+}
+
+.sk-theme-hout .sk-dark.sk-v0 {
+  background-color: #86cc7f;
+  background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgb(255 255 255 / 25%) 9px 18px);
+}
+
+.sk-theme-hout .sk-dark.sk-v1 {
+  background-color: #ec86ab;
+  background-image:
+    linear-gradient(90deg, rgb(255 255 255 / 28%) 50%, transparent 50%),
+    linear-gradient(rgb(255 255 255 / 28%) 50%, transparent 50%);
+  background-size: 18px 18px;
+}
+
+.sk-theme-hout .sk-dark.sk-v2 {
+  background-color: #7db9e6;
+  background-image:
+    radial-gradient(circle at 30% 30%, rgb(255 255 255 / 55%) 0 3px, transparent 4px),
+    radial-gradient(circle at 72% 68%, rgb(255 255 255 / 55%) 0 3px, transparent 4px);
+}
+
+.sk-theme-hout .sk-dark.sk-v3 {
+  background-color: #b095e4;
+  background-image:
+    linear-gradient(90deg, rgb(255 255 255 / 26%) 50%, transparent 50%),
+    linear-gradient(rgb(255 255 255 / 26%) 50%, transparent 50%);
+  background-size: 18px 18px;
+}
+
+/* Gekozen vakje en te slaan stuk: effen geel, boven het patroon uit */
+.sk-theme-hout .sk-sq.sk-selected,
+.sk-theme-hout .sk-sq.sk-capture {
+  background-color: #ffe066;
+  background-image: none;
+}

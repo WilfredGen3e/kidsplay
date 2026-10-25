@@ -2,6 +2,12 @@ import { el } from '../../ui/dom';
 import { pieceName, pieceSvg, type Theme } from './pieces';
 import { SIZE, pieceAt, sameSquare, type Board, type Square } from './rules';
 
+/**
+ * Welk lapje (patroon) elk vakje krijgt, rij voor rij van onder naar boven. Vast en onregelmatig, zodat het een quilt lijkt;
+ * elk patroon komt op lichte én donkere vakjes voor en vakjes van dezelfde kleur naast of boven elkaar zijn nooit gelijk.
+ */
+const PATCHES = '3112312330023001223112310130023031223112300130021231223112300130';
+
 export interface BoardState {
   board: Board;
   theme: Theme;
@@ -27,7 +33,8 @@ export function renderBoard(boardEl: HTMLElement, state: BoardState, onTap: (sq:
       const piece = pieceAt(state.board, sq);
       const cell = el('button', 'sk-sq');
       cell.type = 'button';
-      cell.classList.add((col + row) % 2 === 0 ? 'sk-dark' : 'sk-light');
+      // Het patroon hangt niet samen met licht of donker, zodat het dambord altijd goed te zien blijft.
+      cell.classList.add((col + row) % 2 === 0 ? 'sk-dark' : 'sk-light', `sk-v${PATCHES[row * SIZE + col]}`);
       if (state.selected && sameSquare(state.selected, sq)) cell.classList.add('sk-selected');
       if (state.targets.some((t) => sameSquare(t, sq))) cell.classList.add(piece ? 'sk-capture' : 'sk-target');
       if (state.hint && sameSquare(state.hint, sq)) cell.classList.add('sk-hint');
