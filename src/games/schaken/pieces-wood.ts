@@ -74,16 +74,20 @@ export function woodShapes(kind: Kind, color: Color): string {
       break;
     case 'K': {
       const ink = c.dark;
+      // Rechte romp met schouders en een gouden riem: duidelijk geen jurk zoals bij de koningin.
       figure =
-        `<path d="M40 54 Q33 70 29 82 H71 Q67 70 60 54 Z" ${body}/>` +
-        collar(54, 15) +
+        `<path d="M38 52 L34 82 H66 L62 52 Z" ${body}/>` +
+        `<rect x="35" y="66" width="30" height="6" fill="${GOLD}" stroke="${GOLD_DARK}" stroke-width="2"/>` +
+        `<rect x="46" y="65" width="8" height="8" rx="1.5" fill="${GOLD}" stroke="${GOLD_DARK}" stroke-width="2"/>` +
+        `<path d="M34 54 Q50 47 66 54 L64 60 Q50 55 36 60 Z" ${body}/>` +
         `<circle cx="50" cy="40" r="13" fill="#f4c9a0" stroke="#8a5530" stroke-width="2.4"/>` +
         `<path d="M38 44 Q40 56 50 58 Q60 56 62 44 Q56 50 50 50 Q44 50 38 44 Z" fill="#7a4a28"/>` +
         `<circle cx="45" cy="38" r="1.8" fill="${ink}"/><circle cx="55" cy="38" r="1.8" fill="${ink}"/>` +
         `<path d="M43 44 Q50 41 57 44" fill="none" stroke="#5a3418" stroke-width="3" stroke-linecap="round"/>` +
         `<path d="M46 48 q4 3 8 0" fill="none" stroke="#a04040" stroke-width="1.8" stroke-linecap="round"/>` +
-        crown(29, 13, 3).replace(/<path/, '<path') +
-        `<circle cx="50" cy="14" r="3.4" ${gold}/>`;
+        crown(29, 13, 3) +
+        `<path d="M50 24 V8 M43 14 H57" stroke="${GOLD_DARK}" stroke-width="7" stroke-linecap="round"/>` +
+        `<path d="M50 24 V8 M43 14 H57" stroke="${GOLD}" stroke-width="3.5" stroke-linecap="round"/>`;
       break;
     }
   }

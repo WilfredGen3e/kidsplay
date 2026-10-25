@@ -72,14 +72,17 @@ function shapes(kind: Kind, c: { fill: string; dark: string; shine: string }): s
         `<circle cx="50" cy="16" r="3" ${gold}/>`
       );
     case 'K':
+      // Rechte romp met schouders en een riem in plaats van een jurk, zodat hij anders is dan de koningin.
       return (
         base +
-        dress(54, 16) +
-        `<circle cx="50" cy="40" r="11" ${body}/>` +
-        face(50, 41) +
-        crown(38, 31, 5) +
-        `<path d="M50 24 V8 M43 14 H57" stroke="${GOLD_DARK}" stroke-width="7" stroke-linecap="round"/>` +
-        `<path d="M50 24 V8 M43 14 H57" stroke="${GOLD}" stroke-width="3.5" stroke-linecap="round"/>`
+        `<path d="M36 56 L33 85 L67 85 L64 56 Z" ${body}/>` +
+        `<rect x="34" y="70" width="32" height="6" fill="${GOLD}" stroke="${GOLD_DARK}" stroke-width="2"/>` +
+        `<path d="M32 58 Q50 50 68 58 L66 64 Q50 58 34 64 Z" ${body}/>` +
+        `<circle cx="50" cy="42" r="11" ${body}/>` +
+        face(50, 43) +
+        crown(38, 33, 5) +
+        `<path d="M50 26 V8 M43 14 H57" stroke="${GOLD_DARK}" stroke-width="7" stroke-linecap="round"/>` +
+        `<path d="M50 26 V8 M43 14 H57" stroke="${GOLD}" stroke-width="3.5" stroke-linecap="round"/>`
       );
   }
 }
