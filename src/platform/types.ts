@@ -47,6 +47,8 @@ export interface SavingsInfo {
   remaining: number;
   /** Cadeautjes die het kind nu mag openmaken (0 zolang er geen stickers zijn om te winnen). */
   gifts: number;
+  /** Het dagmaximum aan stickers is bereikt: er komen vandaag geen punten meer bij. */
+  dayFull: boolean;
 }
 
 export interface GameContext {

@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import {
   addPoints,
+  dayFull,
+  earnPoints,
   applyBackfill,
   claimGift,
   defaultRewardState,
@@ -14,8 +16,8 @@ import {
 import { IndexedDbStorage } from './storage/indexeddb';
 
 describe('spaarstand', () => {
-  it('begint op 0 met drempel 50', () => {
-    expect(defaultRewardState()).toEqual({ points: 0, threshold: 50, order: 'random' });
+  it('begint op 0 met drempel 50 en 2 per dag', () => {
+    expect(defaultRewardState()).toEqual({ points: 0, threshold: 50, order: 'fixed', maxPerDay: 2 });
   });
 
   it('geeft een cadeautje bij de drempel en laat restpunten doorschuiven', () => {
@@ -38,13 +40,14 @@ describe('spaarstand', () => {
   it('negeert negatieve aantallen en herstelt ongeldige opslag', () => {
     expect(addPoints(defaultRewardState(), -5).points).toBe(0);
     expect(normalizeRewardState({ points: -1, threshold: 0, order: 'x' as never })).toEqual(defaultRewardState());
-    // Een eerder opgeslagen 'fixed' zonder bewuste keuze van de ouder wordt willekeurig.
-    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'fixed' }).order).toBe('random');
-    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'fixed', orderSet: true }).order).toBe('fixed');
-    expect(normalizeRewardState({ points: 7, threshold: 20, order: 'random' })).toEqual({
+    // Een 'random' zonder bewuste keuze van de ouder wordt op volgorde; een bewuste keuze blijft staan.
+    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'random' }).order).toBe('fixed');
+    expect(normalizeRewardState({ points: 3, threshold: 50, order: 'random', orderSet: true }).order).toBe('random');
+    expect(normalizeRewardState({ points: 7, threshold: 20, order: 'fixed' })).toEqual({
       points: 7,
       threshold: 20,
-      order: 'random',
+      order: 'fixed',
+      maxPerDay: 2,
     });
   });
 
@@ -64,5 +67,40 @@ describe('spaarstand', () => {
     await storage.remove('a');
     expect((await loadRewards(storage, 'a')).points).toBe(0);
     storage.close();
+  });
+});
+
+describe('dagmaximum', () => {
+  const noon = new Date(2026, 9, 25, 12);
+  const tomorrow = new Date(2026, 9, 26, 9);
+  const base = { ...defaultRewardState(), threshold: 10, maxPerDay: 2 };
+
+  it('telt punten tot het maximum en negeert de rest', () => {
+    const s = earnPoints(base, 25, noon);
+    expect(s.points).toBe(20);
+    expect(dayFull(s, noon)).toBe(true);
+    expect(earnPoints(s, 5, noon).points).toBe(20);
+  });
+
+  it('laat elke puzzelgrootte tellen, ook meerdere kleine puzzels achter elkaar', () => {
+    let s = base;
+    for (let i = 0; i < 3; i++) s = earnPoints(s, 4, noon);
+    expect(s.points).toBe(12);
+    expect(dayFull(s, noon)).toBe(false);
+  });
+
+  it('begint de volgende dag opnieuw', () => {
+    const s = earnPoints(base, 20, noon);
+    expect(dayFull(s, tomorrow)).toBe(false);
+    expect(earnPoints(s, 7, tomorrow).points).toBe(27);
+  });
+
+  it('telt restpunten van gisteren niet mee voor vandaag', () => {
+    const s = earnPoints({ ...base, points: 9 }, 20, noon);
+    expect(s.points).toBe(29);
+  });
+
+  it('herstelt een ongeldig maximum naar de standaard', () => {
+    expect(normalizeRewardState({ maxPerDay: 0 }).maxPerDay).toBe(2);
   });
 });

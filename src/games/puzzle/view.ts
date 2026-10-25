@@ -1,6 +1,7 @@
 import { el, iconButton } from '../../ui/dom';
 import { buildPieces, computeGrid } from './grid';
 import { clampToStage, fitScale } from './layout';
+import { bitmapMegabytes } from './meting';
 import {
   IDENTITY,
   centerOn,
@@ -59,6 +60,8 @@ export interface PuzzleOptions {
   hint?: boolean;
   /** Zoomen en verschuiven (grote puzzels voor volwassenen). */
   zoomable?: boolean;
+  /** Aangeroepen als de puzzel op het scherm staat, met laadtijd en geheugen van de stukjes. */
+  onMounted?: (stats: { loadMs: number; bitmapMb: number }) => void;
 }
 
 function storedTrayColumns(): number {
@@ -90,6 +93,7 @@ function shuffled<T>(items: T[]): T[] {
 
 /** Bouwt lade, canvas en sleep-gedrag in `root`; geeft een opruimfunctie terug. */
 export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void {
+  const startedMounting = performance.now();
   const { image } = opts;
   const grid = computeGrid(opts.pieces, image.width, image.height);
   const infos = buildPieces(grid, image.width, image.height);
@@ -664,6 +668,7 @@ export function mountPuzzle(root: HTMLElement, opts: PuzzleOptions): () => void 
   }
   layout();
   window.addEventListener('resize', layout);
+  opts.onMounted?.({ loadMs: performance.now() - startedMounting, bitmapMb: bitmapMegabytes(bitmaps.values()) });
   return () => {
     window.removeEventListener('resize', layout);
     disposeZoom();

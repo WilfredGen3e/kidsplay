@@ -1,6 +1,7 @@
 import type { ProgressStore } from './types';
 
 export const DEFAULT_THRESHOLD = 50;
+export const DEFAULT_MAX_PER_DAY = 2;
 export const REWARDS_KEY = 'platform:rewards';
 
 /** Spaarstand van één kind: puntensaldo, drempel per sticker en hoe de volgende sticker gekozen wordt. */
@@ -11,12 +12,18 @@ export interface RewardState {
   order: 'fixed' | 'random';
   /** Punten uit eerder gespeelde puzzels zijn al bijgeschreven (eenmalig, bij de komst van het stickerboek). */
   backfilled?: boolean;
-  /** De ouder heeft de volgorde zelf gekozen; anders geldt willekeurig. */
+  /** De ouder heeft de volgorde zelf gekozen; anders geldt op volgorde. */
   orderSet?: boolean;
+  /** Hoeveel stickers per dag verdiend kunnen worden; daarna tellen punten pas morgen weer. */
+  maxPerDay: number;
+  /** Datum (lokaal, JJJJ-MM-DD) waarop `todayPoints` is bijgehouden. */
+  day?: string;
+  /** Punten die op `day` zijn bijgeschreven; telt mee voor het dagmaximum. */
+  todayPoints?: number;
 }
 
 export function defaultRewardState(): RewardState {
-  return { points: 0, threshold: DEFAULT_THRESHOLD, order: 'random' };
+  return { points: 0, threshold: DEFAULT_THRESHOLD, order: 'fixed', maxPerDay: DEFAULT_MAX_PER_DAY };
 }
 
 /** Vult ontbrekende of ongeldige velden aan, zodat oude of beschadigde opslag nooit stukgaat. */
@@ -25,12 +32,16 @@ export function normalizeRewardState(saved: Partial<RewardState> | undefined): R
   if (!saved) return base;
   const threshold = Number.isInteger(saved.threshold) && saved.threshold! >= 1 ? saved.threshold! : base.threshold;
   const points = Number.isInteger(saved.points) && saved.points! >= 0 ? saved.points! : 0;
-  // Standaard willekeurig; 'op volgorde' alleen als de ouder dat bewust koos.
-  const order = saved.orderSet && saved.order === 'fixed' ? 'fixed' : 'random';
+  // Standaard op volgorde (voorspelbaar); willekeurig alleen als de ouder dat bewust koos.
+  const order = saved.orderSet && saved.order === 'random' ? 'random' : 'fixed';
+  const maxPerDay = Number.isInteger(saved.maxPerDay) && saved.maxPerDay! >= 1 ? saved.maxPerDay! : base.maxPerDay;
+  const todayPoints = Number.isInteger(saved.todayPoints) && saved.todayPoints! >= 0 ? saved.todayPoints! : 0;
   return {
     points,
     threshold,
     order,
+    maxPerDay,
+    ...(saved.day ? { day: saved.day, todayPoints } : {}),
     ...(saved.orderSet ? { orderSet: true } : {}),
     ...(saved.backfilled ? { backfilled: true } : {}),
   };
@@ -38,6 +49,32 @@ export function normalizeRewardState(saved: Partial<RewardState> | undefined): R
 
 export function addPoints(state: RewardState, count: number): RewardState {
   return { ...state, points: state.points + Math.max(0, Math.floor(count)) };
+}
+
+/** Lokale datum als JJJJ-MM-DD; de dag wisselt dus om middernacht van het apparaat. */
+export function dayKey(now: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function pointsToday(state: RewardState, now: Date): number {
+  return state.day === dayKey(now) ? state.todayPoints ?? 0 : 0;
+}
+
+/** Hoeveel punten er vandaag nog bij mogen voordat het dagmaximum aan stickers bereikt is. */
+export function roomToday(state: RewardState, now: Date = new Date()): number {
+  return Math.max(0, state.maxPerDay * state.threshold - pointsToday(state, now));
+}
+
+/** Het dagmaximum is bereikt: puzzelen kan nog, maar er komen vandaag geen punten meer bij. */
+export function dayFull(state: RewardState, now: Date = new Date()): boolean {
+  return roomToday(state, now) === 0;
+}
+
+/** Schrijft punten bij als gewoon spelen, met het dagmaximum als grens. Restpunten van gisteren tellen niet mee. */
+export function earnPoints(state: RewardState, count: number, now: Date = new Date()): RewardState {
+  const earned = Math.min(Math.max(0, Math.floor(count)), roomToday(state, now));
+  return { ...state, points: state.points + earned, day: dayKey(now), todayPoints: pointsToday(state, now) + earned };
 }
 
 /** Aantal cadeautjes dat het kind nu mag openmaken. */

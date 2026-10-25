@@ -22,19 +22,8 @@ export interface GiftDeps {
 const PAPERS = ['#fa5252', '#fd7e14', '#fab005', '#40c057', '#15aabf', '#4c6ef5', '#be4bdb', '#f06595'];
 const RIBBONS = ['#fff3bf', '#ffffff', '#ffc9c9', '#d0ebff', '#e5dbff'];
 const TAPS_TO_OPEN = 3;
-const MIN_GIFTS = 5;
-const MAX_GIFTS = 8;
 
 const pick = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
-
-function shuffled<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 function giftNode(paper: string, ribbon: string): HTMLElement {
   const gift = el('div', 'gift');
@@ -45,8 +34,8 @@ function giftNode(paper: string, ribbon: string): HTMLElement {
 }
 
 /**
- * Cadeautjesscherm: kies een pakje, scheur het open, de sticker vliegt naar het boek.
- * Welke sticker erin zit staat al vast; alle pakjes bevatten dezelfde. Geeft een opruimfunctie terug.
+ * Cadeautjesscherm: één pakje, scheur het open, de sticker vliegt naar het boek.
+ * Welke sticker erin zit staat vast (standaard op volgorde). Geeft een opruimfunctie terug.
  */
 export function startGifts(root: HTMLElement, deps: GiftDeps): () => void {
   const urls = createUrlBag();
@@ -64,8 +53,7 @@ export function startGifts(root: HTMLElement, deps: GiftDeps): () => void {
   const stage = el('div', 'gift-stage');
   const home = iconButton('🏠', 'Terug', 'corner-button home', deps.onDone);
   const book = iconButton('📖', 'Stickerboek', 'corner-button gift-book', deps.openBook);
-  const counter = el('div', 'gift-counter');
-  screen.append(stage, counter, home, book);
+  screen.append(stage, home, book);
   root.replaceChildren(screen);
   spawnConfetti(screen, 24);
 
@@ -77,35 +65,28 @@ export function startGifts(root: HTMLElement, deps: GiftDeps): () => void {
     if (gifts < 1 || stickers.length === 0) return deps.onDone();
     const album = await listAlbum(deps.data, deps.profile.id);
     const prize = pickNext(stickers, new Set(album.map((e) => e.stickerId)), state.order);
-    counter.textContent = `🎁 ×${gifts}`;
-    choose(prize, album.length);
+    offer(prize, album.length);
   }
 
-  /** Een rij ingepakte pakjes; het kind kiest er één, de rest schuift weg. */
-  function choose(prize: Sticker | undefined, ownedCount: number) {
-    const count = MIN_GIFTS + Math.floor(Math.random() * (MAX_GIFTS - MIN_GIFTS + 1));
-    const papers = shuffled(PAPERS);
-    const row = el('div', 'gift-row');
-    const gifts: HTMLElement[] = [];
-    for (let i = 0; i < count; i++) {
-      const button = el('button', 'gift-choice');
-      button.type = 'button';
-      button.setAttribute('aria-label', 'Cadeautje');
-      const paper = papers[i % papers.length];
-      const ribbon = pick(RIBBONS);
-      button.append(giftNode(paper, ribbon));
-      button.style.animationDelay = `${i * 0.08}s`;
-      button.addEventListener('click', () => {
-        if (row.classList.contains('picked')) return;
-        row.classList.add('picked');
+  /** Eén ingepakt cadeautje; tikken om het groot te maken en open te scheuren. Geen keuze, geen verrassing welke sticker. */
+  function offer(prize: Sticker | undefined, ownedCount: number) {
+    const paper = pick(PAPERS);
+    const ribbon = pick(RIBBONS);
+    const button = el('button', 'gift-choice');
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Cadeautje');
+    button.append(giftNode(paper, ribbon));
+    button.addEventListener(
+      'click',
+      () => {
         button.classList.add('chosen');
-        gifts.forEach((g) => g !== button && g.classList.add('gone'));
         if (soundOn()) playSparkle();
         later(750, () => unwrap(prize, ownedCount, paper, ribbon));
-      });
-      gifts.push(button);
-      row.append(button);
-    }
+      },
+      { once: true },
+    );
+    const row = el('div', 'gift-row');
+    row.append(button);
     stage.replaceChildren(row);
   }
 

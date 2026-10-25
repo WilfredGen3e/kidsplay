@@ -1,6 +1,7 @@
 import type { ManageContext, Profile } from '../../platform/types';
 import { avatarNode, confirmDialog, el, parentHeader as header, textButton } from '../../ui/dom';
 import { showCodeEntry, showLibrary } from './library-ui';
+import { browserStore, clearCrash, collectCrash, describeMeasurement, readMeasurement } from './meting';
 import { NO_IMAGE_ON_CLIPBOARD, createCropper, readClipboardImage, type Cropper } from './cropper';
 import { canvasToBlob, thumbnail } from './image';
 import { ADULT_PIECE_COUNTS, DEFAULT_ADULT_PIECE_OPTIONS, MAX_PIECES, MIN_PIECES, allowedPieceCounts } from './grid';
@@ -106,6 +107,30 @@ export function manage(root: HTMLElement, ctx: ManageContext): () => void {
       list.append(row);
     }
     screen.append(list);
+
+    // Meetgegevens van grote puzzels op dit apparaat (laadtijd en geheugen) en een melding bij een abrupt gestopte app.
+    const store = browserStore();
+    const measurement = store ? readMeasurement(store) : undefined;
+    const crash = store ? collectCrash(store) : undefined;
+    if (measurement || crash) {
+      const meter = el('section', 'card');
+      meter.append(el('h2', '', '📏 Grote puzzels op dit apparaat'));
+      if (measurement) {
+        const when = new Date(measurement.at).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        meter.append(el('p', 'muted', `Laatste keer (${when}): ${describeMeasurement(measurement)}.`));
+      }
+      if (crash) {
+        const when = new Date(crash.at).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        meter.append(
+          el('p', 'error-text', `⚠️ De app is tijdens een grote puzzel van ${crash.pieces} stukjes (${when}) onverwacht gestopt, waarschijnlijk door te weinig geheugen. Kies minder stukjes of een kleinere foto.`),
+          textButton('Melding wissen', 'btn', () => {
+            if (store) clearCrash(store);
+            void showList();
+          }),
+        );
+      }
+      screen.append(meter);
+    }
     root.replaceChildren(screen);
   }
 

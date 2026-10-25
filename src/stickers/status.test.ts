@@ -11,7 +11,7 @@ it('toont pas cadeautjes als er stickers zijn om te winnen', async () => {
   const data = createGameData(storage.records, STICKERS_ID);
   await updateRewards(storage, 'a', (s) => addPoints({ ...s, threshold: 10 }, 23));
 
-  expect(await loadSavings(storage, data, 'a')).toEqual({ have: 3, need: 10, remaining: 7, gifts: 0 });
+  expect(await loadSavings(storage, data, 'a')).toEqual({ have: 3, need: 10, remaining: 7, gifts: 0, dayFull: false });
 
   const sticker = { id: 's1', name: 'Eén', order: 0, forProfile: null } as Sticker;
   await saveSticker(data, sticker);

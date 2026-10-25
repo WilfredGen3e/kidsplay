@@ -93,3 +93,10 @@ Valkuilen tijdens het bouwen: wat ging er mis, waarom, en de fix. Alleen niet-tr
 - **Fix:** een eigen klasse `.tray .piece.filtered-out { display: none }`. Verborgen stukjes blijven in de DOM, dus de volgorde en de tussenstand (`trayOrder`) blijven kloppen.
 - **Geheugen meten:** `sum(canvas.width × canvas.height × 4)` over alle `canvas.piece`; 500 stukjes uit 4000 × 3000 zijn ongeveer 120 MB. Dat is groter dan de JS-heap (10 MB) die `performance.memory` laat zien.
 - **Test:** `getByRole('button', { name: /^Alles/ })` past ook op "Alles zien"; wijs de filterknop aan met zijn klasse.
+
+## Tussenstand vertraagd bewaren: vier momenten waarop hij direct moet
+- **Wat:** `saver.schedule(snapshot)` wacht 0,6 s; wie weggaat voordat de timer afloopt, verliest anders de laatste zet.
+- **Direct wegschrijven (`flush`):** bij het verlaten van de puzzelkeuze en een nieuwe puzzel, bij het sluiten van het spel (opruimfunctie), en bij `visibilitychange: hidden` / `pagehide` (iPad: naar een andere app).
+- **Weggooien (`cancel`):** bij voltooien. Anders schrijft de timer nog een oude tussenstand ná het resultaat, en komt de voltooide puzzel terug als "bezig" (▶️).
+- **Test met een teller:** wikkel `IDBObjectStore.prototype.put` in een `addInitScript` en tel waarden met `"inProgress"`; controleer ook de positieve kant (na een stilte precies één schrijfactie), anders bewijst een nul niets.
+- **Stop-melding op iOS:** een geheugenkill geeft geen `pagehide`. Daarom staat een "bezig"-merk in `localStorage` dat bij naar de achtergrond gaan wordt gewist; staat het er bij het volgende opstarten nog, dan is de app in de voorgrond gestopt. Het blijft een indicatie, geen bewijs.

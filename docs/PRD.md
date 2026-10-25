@@ -109,6 +109,7 @@ Bij een staande foto worden kolommen en rijen omgedraaid.
 ### Afronden
 
 - Als het laatste stukje op de juiste plek ligt, volgt een feestelijke animatie met geluid en de speeltijd.
+- Het feestscherm nodigt niet uit tot nog een rondje: grote 🏠 **Klaar** als hoofdknop, een kleine 🧩 voor een andere puzzel (weg zodra het dagmaximum bereikt is) en geen "Nog een keer". De spaarpot staat er niet; alleen een klaarstaand 🎁 of de 🌙.
 - De puzzel telt als voltooid in de voortgang van het kind.
 - Halverwege stoppen bewaart de tussenstand automatisch.
 
@@ -213,25 +214,25 @@ Elk kind spaart puzzelstukjes; bij elke 50 gelegde stukjes (per profiel instelba
 
 - Elk stukje dat vastklikt telt als 1 punt, ongeacht welk spel of welke puzzel; hetzelfde stukje telt maar één keer per puzzelpoging.
 - De drempel is per profiel in te stellen door de ouder, bijvoorbeeld 20 voor de jongste en 50 voor de oudste. Standaard: 50.
-- In het spellenoverzicht en na elke puzzel ziet het kind een spaarbalk, zoals een pot die zich vult, met daaronder hoeveel stukjes er nog nodig zijn.
+- In het spellenoverzicht en na elke puzzel ziet het kind een spaarbalk, zoals een pot die zich vult. Bewust zonder getallen en zonder aftelling ("nog 4"): dat zet kinderen aan tot "nog één puzzel". Is het dagmaximum bereikt, dan staat er een 🌙 naast de pot.
 - Restpunten schuiven door: wie op 53 uitkomt, begint met 3 aan de volgende sticker.
 - Eenmalig bij de start na de komst van het stickerboek krijgt elk bestaand kind de punten van al gelegde puzzels (voltooide puzzels plus vastgeklikte stukjes van halve puzzels) bijgeschreven (`GameModule.earnedPoints`, vlag `backfilled`).
 
-### Cadeautje kiezen
+### Cadeautje openmaken
 
-1. Als de drempel gehaald is, verschijnt een feestelijk scherm met een rij van 5 tot 8 ingepakte cadeautjes in verschillende kleuren papier en strikken.
-2. Het kind kiest er één; de andere schuiven zacht weg.
+1. Als de drempel gehaald is, verschijnt een feestelijk scherm met één ingepakt cadeautje.
+2. Het kind tikt erop; het wordt groot.
 3. Het kind tikt of klikt een paar keer op het pakje om het papier open te scheuren, met geluid en papiersnippers.
 4. De sticker komt tevoorschijn, wordt groot getoond en vliegt daarna naar het stickerboek.
-5. Heeft een kind meerdere stickers verdiend, dan mag het meerdere keren achter elkaar kiezen.
+5. Heeft een kind meerdere stickers verdiend, dan krijgt het meerdere cadeautjes na elkaar.
 
-### Illusie van keuze
+### Geen gokelement
 
-Welke sticker het kind krijgt, staat al vast voordat het kiest; elk pakje bevat dus dezelfde sticker. Zo houdt de ouder grip op de volgorde en de verrassing, terwijl het kind het gevoel heeft zelf te kiezen. De niet-gekozen pakjes worden nooit geopend getoond.
+Het kind krijgt één cadeautje, geen keuze uit meerdere pakjes: een nepkeuze met een onbekende uitkomst werkt als een gokkast en is bewust vervangen. De sticker staat vast voordat het kind het pakje opent.
 
 De volgende sticker wordt zo bepaald:
 
-- Uit de stickers die het kind nog niet heeft, standaard willekeurig; de ouder kan per profiel kiezen voor op volgorde.
+- Uit de stickers die het kind nog niet heeft, standaard op volgorde, zodat de beloning voorspelbaar is; de ouder kan per profiel bewust voor willekeurig kiezen.
 - Geen dubbele stickers tot de hele set verzameld is.
 - Is alles verzameld, dan krijgt het kind een gouden "compleet"-sticker en kan de ouder nieuwe stickers toevoegen.
 
@@ -241,7 +242,7 @@ Per puzzel een vinkje **🧑 Volwassenen** in de puzzel-editor van de ouder.
 
 - **Aantallen:** 60, 100, 150, 200, 300, 400 of 500 stukjes (standaard 100, 200, 300, 500) in plaats van 4–48.
 - **Resolutie:** de foto wordt bewaard met maximaal 4096 px op de langste zijde en 12 miljoen pixels, zodat inzoomen scherp blijft (gewone puzzels: 2048 px breed).
-- **Geen spaarpunten** en **niet onder de sessieregel**: 500 stukjes zouden anders tien stickers in één keer geven.
+- **Geen spaarpunten**: 500 stukjes zouden anders tien stickers in één keer geven.
 - **Wie ze ziet** regel je met "Zichtbaar voor".
 - **Zoomen en verschuiven** (alleen bij dit vinkje), linksonder in het speelvlak:
   - ➕ en ➖ zoomen, het midden toont het percentage en tikken zet alles terug op "Alles zien".
@@ -256,17 +257,19 @@ Per puzzel een vinkje **🧑 Volwassenen** in de puzzel-editor van de ouder.
   - De pijlen ⬆️ ⬇️ scrollen een schermpagina.
   - Het scherm tekent alleen wat in beeld is; de browser slaat de rest vanzelf over.
 - **Geheugen:** 500 stukjes uit een foto van 4000 × 3000 nemen ongeveer 120 MB aan canvasgeheugen in. Op een oudere iPad kan dat te veel zijn; meten op de iPad staat bij stap 4 hieronder.
-- **Nog te bouwen (fase 9, stap 4):** de tussenstand vertraagd bewaren en meten op de iPad.
+- **Tussenstand:** wordt pas 0,6 seconde na de laatste zet bewaard (bij 500 stukjes is elke zet een grote stand). Bij het verlaten van de puzzel, bij naar de achtergrond gaan en bij voltooien wordt hij meteen weggeschreven of weggegooid, zodat een oude stand de uitslag nooit overschrijft.
+- **Meten op de iPad** (ouder → Fotopuzzel, kaart "📏 Grote puzzels op dit apparaat"):
+  - de laatste meting: aantal stukjes, laadtijd, schatting van het geheugen van de stukjes en (alleen Chrome) JS-geheugen;
+  - een waarschuwing als de app midden in een grote puzzel onverwacht is gestopt (waarschijnlijk te weinig geheugen), met een knop om die te wissen.
 
-### Sessieregel: geen punten sprokkelen met kleine puzzels
+### Dagmaximum: sparen zonder eindeloos doorgaan
 
-Om te voorkomen dat een kind steeds opnieuw een puzzel van 4 stukjes legt voor spaarpunten:
+De eerdere sessieregel (na een puzzel van N stukjes alleen nog meer dan N) is vervallen: het kind kiest elke puzzelgrootte, zo vaak als het wil. Het grinden van punten wordt begrensd door een dagmaximum:
 
-- Heeft een kind in een sessie een puzzel met N stukjes voltooid, dan zijn daarna alleen nog puzzels met **meer dan N** stukjes beschikbaar. Dat geldt voor alle puzzels. Een kleinere of even grote keuze kan dus niet meer.
-- Dezelfde puzzel met hetzelfde aantal stukjes kan daardoor in dezelfde sessie niet nog een keer; de knop "Nog een keer" verdwijnt na het voltooien.
-- Een **sessie** loopt vanaf het kiezen van een profiel tot het kind terug is op het profielenscherm (of de app sluit). Terug naar het spellenoverzicht of naar een ander spel binnen hetzelfde profiel telt nog als dezelfde sessie. De stand wordt niet bewaard.
-- Wat op slot zit, is grijs met een 🔒 en niet aan te tikken; er is geen foutmelding. Zijn alle puzzels op slot, dan toont het scherm 🌙 en een huisknop.
-- Alleen voltooide puzzels tellen. Een half gelegde puzzel op een aantal dat op slot zit, kan in dezelfde sessie ook niet worden hervat.
+- Per profiel stelt de ouder in hoeveel stickers per dag verdiend kunnen worden (ouder → Profielen → Wijzig, standaard **2**). Het maximum aan punten per dag is dat aantal × de drempel.
+- Is het dagmaximum bereikt, dan blijft puzzelen mogelijk, maar komen er vandaag geen punten meer bij. Het kind ziet 🌙, geen foutmelding. Morgen (lokale datum van het apparaat) telt alles weer.
+- Restpunten van eerder blijven staan en tellen niet mee voor het dagmaximum. Punten uit de eenmalige bijschrijving van oude puzzels (backfill) vallen er ook buiten.
+- Volwassenenpuzzels geven geen punten, dus vallen er niet onder.
 - De ouder kan per profiel de verdiende stickers wissen met **🧹 Stickers resetten** (ouder → Profielen → Wijzig). De spaarstand blijft staan.
 
 ### Stickers beheren (ouder)

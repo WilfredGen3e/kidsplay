@@ -22,9 +22,13 @@ import {
   piecesPlaced,
   type PuzzleSnapshot,
 } from './progress';
+import { browserStore, clearBusy, collectCrash, markBusy, saveMeasurement } from './meting';
+import { createDebouncedSaver } from './saver';
 import { ensureSamplePuzzle } from './seed';
-import { allowedCounts, isAllowed as isAllowedCount, recordCompleted, sessionOf, type PuzzleSession } from './session';
 import { mountPuzzle } from './view';
+
+/** Wachttijd voordat een tussenstand wordt weggeschreven. */
+const SNAPSHOT_DELAY_MS = 600;
 
 function start(root: HTMLElement, ctx: GameContext): () => void {
   let stop = () => {};
@@ -46,6 +50,32 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       });
     return queue;
   };
+  // De tussenstand wordt pas bewaard als het even stil is (bij 500 stukjes is elke zet een grote stand).
+  // Bij verlaten, voltooien en naar de achtergrond gaan wordt hij meteen weggeschreven of weggegooid.
+  const saver = createDebouncedSaver<PuzzleSnapshot>(
+    (snapshot) => void update((current) => saveSnapshot(current, snapshot)),
+    SNAPSHOT_DELAY_MS,
+  );
+  const meterStore = browserStore();
+  // Een vorige keer midden in een grote puzzel gestopt? Bewaar dat als melding voor de ouder.
+  if (meterStore) collectCrash(meterStore);
+  /** Aantal stukjes van de grote puzzel die nu open staat; `undefined` als er geen is. */
+  let bigOpen: number | undefined;
+  const onVisibility = () => {
+    if (document.visibilityState === 'hidden') {
+      saver.flush();
+      if (meterStore) clearBusy(meterStore);
+    } else if (meterStore && bigOpen !== undefined) {
+      markBusy(meterStore, bigOpen);
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  window.addEventListener('pagehide', onVisibility);
+  const closeBig = () => {
+    bigOpen = undefined;
+    if (meterStore) clearBusy(meterStore);
+  };
+
   const loadProgress = async () => {
     await queue;
     try {
@@ -55,51 +85,37 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     }
   };
 
-  /** Volwassenenpuzzels vallen niet onder de sessieregel. */
-  const isAllowed = (puzzle: Puzzle, session: PuzzleSession, pieces: number) =>
-    puzzle.adult === true || isAllowedCount(session, pieces);
-  const countsFor = (puzzle: Puzzle) =>
-    puzzle.adult ? puzzle.pieceOptions : allowedCounts(sessionOf(ctx.session), puzzle.pieceOptions);
 
   async function showPicker() {
+    saver.flush();
+    closeBig();
     stop();
     stop = () => {};
     const [all, progress] = await Promise.all([listPuzzles(ctx.data), loadProgress()]);
     if (stopped) return;
     const puzzles = all.filter((p) => isVisibleFor(p, ctx.profile.id));
-    const open = puzzles.filter((p) => countsFor(p).length > 0);
 
     const screen = el('div', 'picker');
     const grid = el('div', 'grid');
     if (puzzles.length === 0) {
       grid.append(el('div', 'empty-state', '🧩'));
       screen.append(grid, el('p', 'empty-hint', 'Nog geen puzzels — maak er een in het ouderdeel (⚙️).'));
-    } else if (open.length === 0) {
-      // Alles in deze sessie gedaan: geen tekst, wel een duidelijke uitgang.
-      grid.append(el('div', 'empty-state', '🌙'));
-      screen.append(grid, iconButton('🏠', 'Klaar', 'corner-button back', ctx.exit));
-      root.replaceChildren(screen);
-      return;
     }
     for (const puzzle of puzzles) {
-      const locked = countsFor(puzzle).length === 0;
       const stars = (progress?.results ?? []).filter((r) => r.puzzleId === puzzle.id).length;
       const busy = (progress?.inProgress ?? []).some((s) => s.puzzleId === puzzle.id);
-      const tile = el('button', `tile puzzle-tile${locked ? ' locked' : ''}`);
+      const tile = el('button', 'tile puzzle-tile');
       tile.type = 'button';
-      tile.disabled = locked;
       tile.setAttribute('aria-label', puzzle.name);
       const img = el('img', 'puzzle-thumb');
       img.src = url(puzzle.thumb);
       img.alt = '';
       img.draggable = false;
       tile.append(img, el('span', 'tile-name', puzzle.name));
-      const badges = locked ? '🔒' : `${busy ? '▶️ ' : ''}${stars > 0 ? `⭐ ${stars}` : ''}`;
+      const badges = `${busy ? '▶️ ' : ''}${stars > 0 ? `⭐ ${stars}` : ''}`;
       tile.append(el('span', 'stars', badges));
       tile.addEventListener('click', () => {
-        const counts = countsFor(puzzle);
         if (puzzle.pieceOptions.length === 1) void play(puzzle, puzzle.pieceOptions[0]);
-        else if (counts.length === 1) void play(puzzle, counts[0]);
         else showCounts(puzzle, progress);
       });
       grid.append(tile);
@@ -115,18 +131,15 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     preview.src = url(puzzle.thumb);
     preview.alt = '';
     const grid = el('div', 'grid count-grid');
-    const session = sessionOf(ctx.session);
     for (const count of puzzle.pieceOptions) {
-      const locked = !isAllowed(puzzle, session, count);
       const done = (progress?.results ?? []).some((r) => r.puzzleId === puzzle.id && r.pieces === count);
       const busy = findSnapshot(progress, puzzle.id, count) !== undefined;
-      const tile = el('button', `tile count-tile${locked ? ' locked' : ''}`);
+      const tile = el('button', 'tile count-tile');
       tile.type = 'button';
-      tile.disabled = locked;
       tile.setAttribute('aria-label', `${count}`);
       tile.append(
         el('span', 'tile-icon', String(count)),
-        el('span', 'stars', locked ? '🔒' : `${busy ? '▶️ ' : ''}${done ? '⭐' : ''}`),
+        el('span', 'stars', `${busy ? '▶️ ' : ''}${done ? '⭐' : ''}`),
       );
       tile.addEventListener('click', () => void play(puzzle, count));
       grid.append(tile);
@@ -136,8 +149,8 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
   }
 
   async function play(puzzle: Puzzle, pieces: number, fresh = false) {
-    // Ook als er toch iets aangeklikt wordt wat op slot zit (bijvoorbeeld een oud scherm).
-    if (!isAllowed(puzzle, sessionOf(ctx.session), pieces)) return void showPicker();
+    saver.flush();
+    closeBig();
     stop();
     stop = () => {};
     const [settings, progress, image] = await Promise.all([
@@ -160,15 +173,29 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       restore: fresh ? undefined : findSnapshot(progress, puzzle.id, pieces),
       // Volwassenenpuzzels geven geen spaarpunten.
       onLock: puzzle.adult ? undefined : (count) => void ctx.addPoints(count).catch(() => {}),
-      onProgress: (snapshot: PuzzleSnapshot) => void update((current) => saveSnapshot(current, snapshot)),
+      onProgress: (snapshot: PuzzleSnapshot) => saver.schedule(snapshot),
+      onMounted: (stats) => {
+        if (!puzzle.adult || !meterStore) return;
+        bigOpen = pieces;
+        markBusy(meterStore, pieces);
+        const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
+        saveMeasurement(meterStore, {
+          pieces,
+          loadMs: Math.round(stats.loadMs),
+          bitmapMb: stats.bitmapMb,
+          ...(memory ? { heapMb: Math.round(memory.usedJSHeapSize / 1048576) } : {}),
+          at: new Date().toISOString(),
+        });
+      },
       onComplete: async (timeMs) => {
+        // Een nog wachtende tussenstand mag de uitslag niet overschrijven.
+        saver.cancel();
+        closeBig();
         const previous = await loadProgress();
         // De punten van de laatste stukjes staan al in de wachtrij; lezen wacht daarop.
         const savings = await ctx.savings().catch(() => undefined);
         if (stopped) return;
         const best = bestTime(previous, puzzle.id, pieces);
-        // Vanaf nu zijn in deze sessie alleen nog puzzels met méér stukjes toegestaan, dus geen "nog een keer".
-        if (!puzzle.adult) recordCompleted(ctx.session, pieces);
         showCelebration(root, {
           timeMs,
           isRecord: best !== undefined && timeMs < best,
@@ -188,6 +215,10 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
   void showPicker();
 
   return () => {
+    saver.flush();
+    closeBig();
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('pagehide', onVisibility);
     stopped = true;
     stop();
     for (const u of urls) URL.revokeObjectURL(u);

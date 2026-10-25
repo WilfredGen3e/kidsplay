@@ -287,11 +287,22 @@ button {
   margin-top: 8px;
 }
 
-.celebration-buttons .round-button {
-  min-width: 96px;
-  min-height: 96px;
-  font-size: 48px;
+.celebration-buttons {
+  align-items: center;
+}
+
+.celebration-home {
+  min-width: 120px;
+  min-height: 120px;
+  font-size: 64px;
   background: #ffd43b;
+}
+
+.celebration-pick {
+  min-width: 64px;
+  min-height: 64px;
+  font-size: 32px;
+  opacity: 0.7;
 }
 
 .confetti {
@@ -984,25 +995,9 @@ img.preview-avatar {
   transition: height 1.2s ease-out;
 }
 
-.jar-count {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-  font-weight: 700;
-  color: #5c3d00;
-}
-
-.savings-label {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 28px;
-}
-
-.savings-label strong {
-  font-size: 48px;
+.savings-moon {
+  font-size: 56px;
+  line-height: 1;
 }
 
 .gift-button,
@@ -1065,14 +1060,6 @@ img.preview-avatar {
   inset: 0;
   display: grid;
   place-items: center;
-}
-
-.gift-counter {
-  position: absolute;
-  top: 24px;
-  right: 32px;
-  font-size: 48px;
-  font-weight: 700;
 }
 
 .gift-book {

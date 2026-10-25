@@ -160,6 +160,14 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
   const thresholdRow = el('label', 'row');
   thresholdRow.append(el('span', 'row-label', '🎁 Cadeautje na zoveel stukjes'), threshold, el('span', 'muted', '🧩'));
 
+  const perDay = el('input', 'text-input number-input');
+  perDay.type = 'number';
+  perDay.min = '1';
+  perDay.max = '20';
+  perDay.value = String(rewards.maxPerDay);
+  const perDayRow = el('label', 'row');
+  perDayRow.append(el('span', 'row-label', '🌙 Maximaal aantal stickers per dag'), perDay, el('span', 'muted', '🎁'));
+
   const orderBox = el('div', 'segmented');
   for (const [value, label] of [['fixed', '1️⃣ Op volgorde'], ['random', '🎲 Willekeurig']] as const) {
     const b = textButton(label, `seg${rewards.order === value ? ' active' : ''}`, () => {
@@ -193,8 +201,10 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
     if (!draft.name) return void (error.textContent = 'Geef het profiel een naam.');
     const wanted = Math.round(Number(threshold.value));
     if (!Number.isFinite(wanted) || wanted < 1 || wanted > 500) return void (error.textContent = 'Kies een aantal stukjes tussen 1 en 500.');
+    const limit = Math.round(Number(perDay.value));
+    if (!Number.isFinite(limit) || limit < 1 || limit > 20) return void (error.textContent = 'Kies een maximum tussen 1 en 20 stickers per dag.');
     await deps.profiles.put(draft);
-    await updateRewards(deps.progress, draft.id, (state) => ({ ...state, threshold: wanted, order: rewards.order, orderSet: true, backfilled: true }));
+    await updateRewards(deps.progress, draft.id, (state) => ({ ...state, threshold: wanted, maxPerDay: limit, order: rewards.order, orderSet: true, backfilled: true }));
     await showProfiles(root, deps);
   });
 
@@ -212,6 +222,7 @@ async function showEditor(root: HTMLElement, deps: ProfilesDeps, existing?: Prof
     soundRow,
     el('h3', '', '🎁 Beloning'),
     thresholdRow,
+    perDayRow,
     orderRow,
     ...(existing ? [resetStickers, resetNote] : []),
     error,

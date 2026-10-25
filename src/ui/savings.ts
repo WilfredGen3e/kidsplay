@@ -1,23 +1,30 @@
 import type { SavingsInfo } from '../platform/types';
 import { el } from './dom';
 
-/** Spaarpot die zich vult, met daaronder hoeveel stukjes er nog nodig zijn; bij een klaar cadeautje een 🎁-knop. */
-export function savingsBar(info: SavingsInfo, onGifts?: () => void): HTMLElement {
+/**
+ * Spaarpot die zich vult, bewust zonder getallen (geen aftelling); is het dagmaximum bereikt, dan staat er een 🌙;
+ * bij een klaar cadeautje een 🎁-knop. Met `showJar = false` ontbreekt de pot (feestscherm).
+ */
+export function savingsBar(info: SavingsInfo, onGifts?: () => void, showJar = true): HTMLElement {
   const bar = el('div', 'savings');
   const jar = el('div', 'jar');
   jar.setAttribute('role', 'img');
-  jar.setAttribute('aria-label', `Nog ${info.remaining} stukjes tot een cadeautje`);
+  jar.setAttribute('aria-label', 'Spaarpot');
   const fill = el('div', 'jar-fill');
   fill.style.height = '0%';
-  jar.append(el('div', 'jar-lid'), fill, el('div', 'jar-count', `${info.have}/${info.need}`));
+  jar.append(el('div', 'jar-lid'), fill);
   // Eerst leeg tekenen en dan laten vollopen, zodat het vullen zichtbaar is.
   requestAnimationFrame(() => requestAnimationFrame(() => (fill.style.height = `${Math.round((info.have / info.need) * 100)}%`)));
 
-  const label = el('div', 'savings-label');
-  label.append(el('span', '', 'Nog'), el('strong', '', String(info.remaining)), el('span', '', '🧩'));
   const left = el('div', 'savings-jar');
-  left.append(jar, label);
-  bar.append(left);
+  if (showJar) left.append(jar);
+  if (info.dayFull) {
+    const moon = el('span', 'savings-moon', '🌙');
+    moon.setAttribute('role', 'img');
+    moon.setAttribute('aria-label', 'Genoeg voor vandaag');
+    left.append(moon);
+  }
+  if (left.childElementCount > 0) bar.append(left);
 
   if (info.gifts > 0 && onGifts) {
     const gift = el('button', 'gift-button');
