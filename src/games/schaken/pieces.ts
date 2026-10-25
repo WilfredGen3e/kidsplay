@@ -1,4 +1,9 @@
+import { woodShapes } from './pieces-wood';
 import type { Color, Kind, Piece } from './rules';
+
+/** Het uiterlijk van de stukken en het bord: `prinses` (roze en paars) of `hout` (houten stukken). */
+export type Theme = 'prinses' | 'hout';
+export const THEMES: readonly Theme[] = ['prinses', 'hout'];
 
 /** Kleuren per kant: wit is roze, zwart is paars. */
 const PALETTE: Record<Color, { fill: string; dark: string; shine: string }> = {
@@ -80,8 +85,9 @@ function shapes(kind: Kind, c: { fill: string; dark: string; shine: string }): s
 }
 
 /** SVG-tekst van één figuurtje; vult het vak waarin het staat. */
-export function pieceSvg(piece: Piece): string {
-  return `<svg viewBox="0 0 100 100" aria-hidden="true">${shapes(piece.kind, PALETTE[piece.color])}</svg>`;
+export function pieceSvg(piece: Piece, theme: Theme = 'prinses'): string {
+  const inner = theme === 'hout' ? woodShapes(piece.kind, piece.color) : shapes(piece.kind, PALETTE[piece.color]);
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">${inner}</svg>`;
 }
 
 const NAMES: Record<Kind, string> = {

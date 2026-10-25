@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, sentenceFor, timesDone } from './levels';
+import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, sentenceFor, themeOf, timesDone } from './levels';
 
 describe('voortgang', () => {
   it('begint leeg bij level 1', () => {
@@ -15,6 +15,11 @@ describe('voortgang', () => {
     const p = finishLevel(undefined, 1, 5, 5).progress;
     finishLevel(p, 1, 5, 5);
     expect(timesDone(p, 1)).toBe(1);
+  });
+  it('bewaart het gekozen uiterlijk bij het uitspelen van een level', () => {
+    const p = finishLevel({ done: {}, theme: 'hout' }, 0, 5, 5).progress;
+    expect(themeOf(p)).toBe('hout');
+    expect(themeOf(undefined)).toBe('prinses');
   });
   it('oude voortgang zonder current: het eerste level dat nog niet gehaald is', () => {
     expect(currentLevel({ done: { '0': 1, '2': 1 } })).toBe(1);

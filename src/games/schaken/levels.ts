@@ -1,3 +1,4 @@
+import type { Theme } from './pieces';
 import type { Kind } from './rules';
 import type { Exercise } from './exercises';
 
@@ -31,6 +32,12 @@ export interface ChessProgress {
   current?: number;
   /** Levels waar het vorige keer veel misging: de volgende keer makkelijkere opdrachtjes. */
   easy?: Record<string, boolean>;
+  /** Het uiterlijk dat het kind koos; ontbreekt = `prinses`. */
+  theme?: Theme;
+}
+
+export function themeOf(progress: ChessProgress | undefined): Theme {
+  return progress?.theme ?? 'prinses';
 }
 
 export function timesDone(progress: ChessProgress | undefined, level: number): number {
@@ -76,7 +83,7 @@ export function finishLevel(
   const before = currentLevel(progress) ?? LEVELS.length;
   const current = outcome === 'up' ? Math.max(before, level + 1) : before;
   return {
-    progress: { done: { ...progress?.done, [key]: timesDone(progress, level) + 1 }, current, easy },
+    progress: { ...progress, done: { ...progress?.done, [key]: timesDone(progress, level) + 1 }, current, easy },
     outcome,
   };
 }

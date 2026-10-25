@@ -1,9 +1,10 @@
 import { el } from '../../ui/dom';
-import { pieceName, pieceSvg } from './pieces';
+import { pieceName, pieceSvg, type Theme } from './pieces';
 import { SIZE, pieceAt, sameSquare, type Board, type Square } from './rules';
 
 export interface BoardState {
   board: Board;
+  theme: Theme;
   selected?: Square;
   /** Vakjes waar het gekozen stuk naartoe mag (gouden bolletjes). */
   targets: Square[];
@@ -41,7 +42,7 @@ export function renderBoard(boardEl: HTMLElement, state: BoardState, onTap: (sq:
         cell.setAttribute('aria-label', pieceName(piece.kind));
         const holder = el('span', 'sk-piece');
         if (state.moved && sameSquare(state.moved, sq)) holder.classList.add('sk-landed');
-        holder.innerHTML = pieceSvg(piece);
+        holder.innerHTML = pieceSvg(piece, state.theme);
         cell.append(holder);
       }
       cell.addEventListener('click', () => onTap(sq));

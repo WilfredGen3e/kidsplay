@@ -2,6 +2,7 @@ import { el, iconButton } from '../../ui/dom';
 import { playSparkle } from '../../ui/sound';
 import { renderBoard } from './board';
 import { bestMoves, boardFor, stepsLeft, type Exercise } from './exercises';
+import type { Theme } from './pieces';
 import { sentenceFor, type Level } from './levels';
 import { movePiece, movesFor, pieceAt, sameSquare, type Board, type Square } from './rules';
 
@@ -12,6 +13,7 @@ const NEXT_DELAY_MS = 1100;
 
 export interface PlayOptions {
   level: Level;
+  theme: Theme;
   exercises: Exercise[];
   soundOn: boolean;
   /** Een opdrachtje is gehaald (voor de spaarpunten); `clean` als het zonder omweg ging. */
@@ -32,7 +34,7 @@ export function mountLevel(root: HTMLElement, opts: PlayOptions): () => void {
   let clean = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  const wrap = el('div', 'schaken schaken-play');
+  const wrap = el('div', `schaken schaken-play sk-theme-${opts.theme}`);
   const boardEl = el('div', 'sk-board');
   const side = el('div', 'sk-side');
   const sentenceEl = el('p', 'sk-sentence');
@@ -49,7 +51,7 @@ export function mountLevel(root: HTMLElement, opts: PlayOptions): () => void {
     const targets = selected ? movesFor(board, selected) : [];
     const hint =
       selected && misses >= MISSES_FOR_HINT && !won ? bestMoves(ex, selected)[0] : undefined;
-    renderBoard(boardEl, { board, selected, targets, moved, goal: ex.goal, hint, won }, tap);
+    renderBoard(boardEl, { board, theme: opts.theme, selected, targets, moved, goal: ex.goal, hint, won }, tap);
     sentenceEl.textContent = sentence();
     stars.replaceChildren(
       ...opts.exercises.map((_, i) => el('span', i < index || (won && i === index) ? 'sk-star sk-star-on' : 'sk-star', '⭐')),

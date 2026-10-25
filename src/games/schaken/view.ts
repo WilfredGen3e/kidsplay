@@ -1,6 +1,6 @@
 import { el, iconButton } from '../../ui/dom';
 import { renderBoard } from './board';
-import { pieceName, pieceSvg } from './pieces';
+import { pieceName, pieceSvg, type Theme } from './pieces';
 import {
   emptyBoard,
   movePiece,
@@ -31,13 +31,13 @@ const SOLO_START: Record<Kind, Square> = {
  * Oefenbord: kies een stuk, tik erop en zie waar het naartoe mag, tik op een bolletje om te lopen.
  * Het kind kan niets fout doen; er zijn geen beurten en geen regels die blokkeren.
  */
-export function mountBoard(root: HTMLElement, onBack: () => void): () => void {
+export function mountBoard(root: HTMLElement, theme: Theme, onBack: () => void): () => void {
   let board: Board = emptyBoard();
   let selected: Square | undefined;
   let moved: Square | undefined;
   let chosen: Kind | 'all' = 'Q';
 
-  const wrap = el('div', 'schaken');
+  const wrap = el('div', `schaken sk-theme-${theme}`);
   const boardEl = el('div', 'sk-board');
   const picker = el('div', 'sk-picker');
   wrap.append(boardEl, picker);
@@ -70,7 +70,7 @@ export function mountBoard(root: HTMLElement, onBack: () => void): () => void {
   };
 
   const render = () => {
-    renderBoard(boardEl, { board, selected, moved, targets: selected ? movesFor(board, selected) : [] }, tap);
+    renderBoard(boardEl, { board, theme, selected, moved, targets: selected ? movesFor(board, selected) : [] }, tap);
 
     picker.replaceChildren(
       ...PICKER.map((kind) => {
@@ -78,7 +78,7 @@ export function mountBoard(root: HTMLElement, onBack: () => void): () => void {
         button.type = 'button';
         button.setAttribute('aria-label', pieceName(kind));
         button.classList.toggle('sk-pick-on', chosen === kind);
-        button.innerHTML = pieceSvg({ kind, color: 'w' });
+        button.innerHTML = pieceSvg({ kind, color: 'w' }, theme);
         button.addEventListener('click', () => setup(kind));
         return button;
       }),

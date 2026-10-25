@@ -4,9 +4,9 @@ import { el, iconButton } from '../../ui/dom';
 import { playFanfare } from '../../ui/sound';
 import { savingsBar } from '../../ui/savings';
 import { EXERCISES_PER_LEVEL, makeExercises } from './exercises';
-import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, timesDone, type ChessProgress } from './levels';
+import { LEVELS, currentLevel, finishLevel, isEasy, levelsDone, themeOf, timesDone, type ChessProgress } from './levels';
 import { mountLevel } from './play';
-import { pieceName, pieceSvg } from './pieces';
+import { THEMES, pieceName, pieceSvg, type Theme } from './pieces';
 import { mountBoard } from './view';
 
 export const GAME_ID = 'schaken';
@@ -46,7 +46,8 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     const progress = await loadProgress();
     if (stopped) return;
     const next = currentLevel(progress);
-    const map = el('div', 'schaken sk-map');
+    const theme = themeOf(progress);
+    const map = el('div', `schaken sk-map sk-theme-${theme}`);
     const grid = el('div', 'sk-levels');
     LEVELS.forEach((level, i) => {
       const done = timesDone(progress, i) > 0;
@@ -55,7 +56,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       tile.setAttribute('aria-label', pieceName(level.kind));
       tile.classList.toggle('sk-tile-next', i === next);
       const icon = el('span', 'sk-tile-icon');
-      icon.innerHTML = pieceSvg({ kind: level.kind, color: 'w' });
+      icon.innerHTML = pieceSvg({ kind: level.kind, color: 'w' }, theme);
       tile.append(icon, el('span', 'sk-tile-badge', done ? '⭐' : i === next ? '▶️' : ''));
       tile.addEventListener('click', () => void playLevel(i));
       grid.append(tile);
@@ -64,10 +65,26 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
     free.type = 'button';
     free.setAttribute('aria-label', 'Vrij oefenen');
     free.append(el('span', 'sk-tile-icon sk-tile-crown', '👑'));
-    free.addEventListener('click', () => swap(() => (stop = mountBoard(root, () => void showMap()))));
+    free.addEventListener('click', () => swap(() => (stop = mountBoard(root, theme, () => void showMap()))));
     grid.append(free);
-    map.append(grid);
+    // Uiterlijk kiezen: twee knoppen met de koning van elk thema, geen tekst.
+    const themes = el('div', 'sk-themes');
+    for (const option of THEMES) {
+      const button = el('button', 'sk-theme-pick');
+      button.type = 'button';
+      button.setAttribute('aria-label', option);
+      button.classList.toggle('sk-pick-on', option === theme);
+      button.innerHTML = pieceSvg({ kind: 'K', color: 'w' }, option);
+      button.addEventListener('click', () => void chooseTheme(option));
+      themes.append(button);
+    }
+    map.append(grid, themes);
     root.replaceChildren(map);
+  }
+
+  async function chooseTheme(theme: Theme) {
+    await update((current) => ({ done: {}, ...current, theme }));
+    if (!stopped) void showMap();
   }
 
   async function playLevel(levelIndex: number) {
@@ -77,6 +94,7 @@ function start(root: HTMLElement, ctx: GameContext): () => void {
       const level = LEVELS[levelIndex];
       stop = mountLevel(root, {
         level,
+        theme: themeOf(progress),
         exercises: makeExercises(level.kind, Math.random, isEasy(progress, levelIndex)),
         soundOn: ctx.profile.soundOn,
         // Direct aanroepen (zonder await): de wachtrij van de spaarpunten loopt dan voor op het lezen van de stand.
